@@ -171,16 +171,13 @@
         {% endfor %}
       </div>
 
-      <!-- dummy chat input footer (purely aesthetic for admin) -->
+      <!-- Chat input for admin -->
       <div class="flex items-end px-4 py-2 bg-[#f0f2f5] dark:bg-[#202c33] z-10 sticky bottom-0 min-h-[62px] gap-2">
-        <div class="p-2 text-gray-500 cursor-not-allowed">
-            <svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor"><path d="M9.153 11.603c.795 0 1.439-.879 1.439-1.962s-.644-1.962-1.439-1.962-1.439.879-1.439 1.962.644 1.962 1.439 1.962zm-3.204 1.362c-.026-.307-.131 5.218 6.063 5.551 6.066-.25 6.066-5.551 6.066-5.551-6.078 1.416-12.129 0-12.129 0zm11.363-1.108c.795 0 1.439-.879 1.439-1.962s-.644-1.962-1.439-1.962-1.439.879-1.439 1.962.644 1.962 1.439 1.962z"/></svg>
-        </div>
         <div class="flex-1 bg-white dark:bg-[#2a3942] rounded-lg border border-transparent flex items-center px-3 py-2 mb-1.5 shadow-sm">
-            <input type="text" placeholder="Type a message (Admin view only)" class="w-full bg-transparent border-none outline-none text-[15px] dark:text-gray-200 text-gray-500 cursor-not-allowed" disabled>
+            <input type="text" id="adminChatInput" placeholder="Type a message to {{ selected_phone }}" class="w-full bg-transparent border-none outline-none text-[15px] dark:text-gray-200 text-gray-800" onkeydown="handleChatInput(event, '{{ selected_phone }}')">
         </div>
-        <div class="p-2 text-gray-500 cursor-not-allowed mb-0.5">
-            <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M11.999 14.942c2.001 0 3.531-1.53 3.531-3.531V4.35c0-2.001-1.53-3.531-3.531-3.531S8.469 2.349 8.469 4.35v7.061c0 2.001 1.53 3.531 3.53 3.531zm6.238-3.53c0 3.531-2.942 6.002-6.237 6.002s-6.237-2.471-6.237-6.002H3.761c0 4.001 3.178 7.297 7.061 7.885v3.884h2.354v-3.884c3.884-.588 7.061-3.884 7.061-7.885h-2.002z"/></svg>
+        <div class="p-2 text-[#00a884] cursor-pointer mb-0.5 hover:bg-gray-200 dark:hover:bg-[#374c55] rounded-full transition" onclick="sendAdminMessage('{{ selected_phone }}')">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M1.101 21.757L23.8 12.028 1.101 2.3l.011 7.912 13.623 1.816-13.623 1.817-.011 7.912z"></path></svg>
         </div>
       </div>
       
@@ -248,6 +245,41 @@
         } catch (error) {
             console.error(error);
             alert("Error resetting session.");
+        }
+    }
+
+    // Send admin message
+    async function sendAdminMessage(phone) {
+        const input = document.getElementById('adminChatInput');
+        const text = input.value.trim();
+        if (!text) return;
+
+        input.disabled = true;
+        
+        try {
+            const response = await fetch('/admin/chats/send', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ phone: phone, message: text })
+            });
+            if (response.ok) {
+                input.value = '';
+                location.reload(); 
+            } else {
+                alert("Failed to send message.");
+            }
+        } catch (error) {
+            console.error(error);
+            alert("Error sending message.");
+        } finally {
+            input.disabled = false;
+            input.focus();
+        }
+    }
+
+    function handleChatInput(event, phone) {
+        if (event.key === 'Enter') {
+            sendAdminMessage(phone);
         }
     }
   </script>
