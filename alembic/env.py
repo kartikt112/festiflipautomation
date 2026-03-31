@@ -5,9 +5,13 @@ from sqlalchemy import pool
 from sqlalchemy.ext.asyncio import async_engine_from_config
 from alembic import context
 import asyncio
+import sys
+import os
+sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
 # Import all models so Alembic can discover them
 from app.models import *  # noqa: F401, F403
+
 from app.database import Base
 from app.config import settings
 
