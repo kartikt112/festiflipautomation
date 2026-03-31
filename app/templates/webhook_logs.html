@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% set active = "webhooks" %}
+{% block title %}FestiFlip Admin - Webhook Logs{% endblock %}
+{% block page_title %}Webhook Logs{% endblock %}
+
+{% block content %}
+<div class="table-container">
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Source</th>
+                <th>Event Type</th>
+                <th>Event ID</th>
+                <th>Status</th>
+                <th>Error</th>
+                <th>Created</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for log in logs %}
+            <tr>
+                <td>{{ log.id }}</td>
+                <td><span class="badge badge-{{ log.source }}">{{ log.source }}</span></td>
+                <td>{{ log.event_type or '-' }}</td>
+                <td class="truncate">{{ log.event_id or '-' }}</td>
+                <td><span class="badge badge-{{ log.status }}">{{ log.status }}</span></td>
+                <td class="truncate">{{ log.error_message or '-' }}</td>
+                <td>{{ log.created_at.strftime('%Y-%m-%d %H:%M:%S') if log.created_at else '-' }}</td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="7" class="empty">No webhook logs found</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

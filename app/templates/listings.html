@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% set active = "listings" %}
+{% block title %}FestiFlip Admin - Listings{% endblock %}
+{% block page_title %}Sell Offers{% endblock %}
+
+{% block content %}
+<div class="table-container">
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Event</th>
+                <th>Date</th>
+                <th>Qty</th>
+                <th>Price/Ticket</th>
+                <th>Seller</th>
+                <th>Phone</th>
+                <th>Verified</th>
+                <th>Status</th>
+                <th>Created</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for offer in offers %}
+            <tr>
+                <td>{{ offer.id }}</td>
+                <td>{{ offer.event_name }}</td>
+                <td>{{ offer.event_date or '-' }}</td>
+                <td>{{ offer.quantity }}</td>
+                <td>€{{ "%.2f"|format(offer.price_per_ticket) }}</td>
+                <td>{{ offer.first_name }} {{ offer.last_name or '' }}</td>
+                <td>{{ offer.phone }}</td>
+                <td><span class="badge badge-{{ offer.verification_status.value|lower }}">{{
+                        offer.verification_status.value }}</span></td>
+                <td><span class="badge badge-{{ offer.status.value|lower }}">{{ offer.status.value }}</span></td>
+                <td>{{ offer.created_at.strftime('%Y-%m-%d %H:%M') if offer.created_at else '-' }}</td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="10" class="empty">No listings found</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

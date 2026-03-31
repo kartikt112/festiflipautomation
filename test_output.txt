@@ -1,0 +1,576 @@
+INFO: Cleaning up previous test data...
+2026-02-19 21:10:56,757 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+INFO: BEGIN (implicit)
+2026-02-19 21:10:56,757 INFO sqlalchemy.engine.Engine DELETE FROM chat_sessions WHERE phone IN (?, ?)
+INFO: DELETE FROM chat_sessions WHERE phone IN (?, ?)
+2026-02-19 21:10:56,757 INFO sqlalchemy.engine.Engine [generated in 0.00006s] ('+316TESTBUYER', '+316TESTSELLER')
+INFO: [generated in 0.00006s] ('+316TESTBUYER', '+316TESTSELLER')
+2026-02-19 21:10:56,758 INFO sqlalchemy.engine.Engine DELETE FROM buy_requests WHERE phone = ?
+INFO: DELETE FROM buy_requests WHERE phone = ?
+2026-02-19 21:10:56,758 INFO sqlalchemy.engine.Engine [generated in 0.00004s] ('+316TESTBUYER',)
+INFO: [generated in 0.00004s] ('+316TESTBUYER',)
+2026-02-19 21:10:56,758 INFO sqlalchemy.engine.Engine DELETE FROM sell_offers WHERE phone = ?
+INFO: DELETE FROM sell_offers WHERE phone = ?
+2026-02-19 21:10:56,758 INFO sqlalchemy.engine.Engine [generated in 0.00005s] ('+316TESTSELLER',)
+INFO: [generated in 0.00005s] ('+316TESTSELLER',)
+2026-02-19 21:10:56,758 INFO sqlalchemy.engine.Engine COMMIT
+INFO: COMMIT
+INFO: Step 1: Buyer requests unavailable ticket
+INFO: --- Conversation with +316TESTBUYER ---
+USER (+316TESTBUYER): Ik zoek 1 ticket voor Tomorrowland 2026
+2026-02-19 21:10:56,759 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+INFO: BEGIN (implicit)
+2026-02-19 21:10:56,762 INFO sqlalchemy.engine.Engine SELECT chat_sessions.id, chat_sessions.phone, chat_sessions.current_intent, chat_sessions.current_step, chat_sessions.collected_data, chat_sessions.last_updated, chat_sessions.created_at 
+FROM chat_sessions 
+WHERE chat_sessions.phone = ?
+INFO: SELECT chat_sessions.id, chat_sessions.phone, chat_sessions.current_intent, chat_sessions.current_step, chat_sessions.collected_data, chat_sessions.last_updated, chat_sessions.created_at 
+FROM chat_sessions 
+WHERE chat_sessions.phone = ?
+2026-02-19 21:10:56,762 INFO sqlalchemy.engine.Engine [generated in 0.00005s] ('+316TESTBUYER',)
+INFO: [generated in 0.00005s] ('+316TESTBUYER',)
+2026-02-19 21:10:56,763 INFO sqlalchemy.engine.Engine INSERT INTO chat_sessions (phone, current_intent, current_step, collected_data) VALUES (?, ?, ?, ?) RETURNING id, last_updated, created_at
+INFO: INSERT INTO chat_sessions (phone, current_intent, current_step, collected_data) VALUES (?, ?, ?, ?) RETURNING id, last_updated, created_at
+2026-02-19 21:10:56,763 INFO sqlalchemy.engine.Engine [generated in 0.00007s] ('+316TESTBUYER', None, 'IDLE', '{}')
+INFO: [generated in 0.00007s] ('+316TESTBUYER', None, 'IDLE', '{}')
+2026-02-19 21:10:56,764 INFO sqlalchemy.engine.Engine SELECT chat_sessions.id, chat_sessions.phone, chat_sessions.current_intent, chat_sessions.current_step, chat_sessions.collected_data, chat_sessions.last_updated, chat_sessions.created_at 
+FROM chat_sessions 
+WHERE chat_sessions.id = ?
+INFO: SELECT chat_sessions.id, chat_sessions.phone, chat_sessions.current_intent, chat_sessions.current_step, chat_sessions.collected_data, chat_sessions.last_updated, chat_sessions.created_at 
+FROM chat_sessions 
+WHERE chat_sessions.id = ?
+2026-02-19 21:10:56,764 INFO sqlalchemy.engine.Engine [generated in 0.00005s] (30,)
+INFO: [generated in 0.00005s] (30,)
+INFO: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO: AI classified message as: BUY_REQUEST (confidence: 0.8)
+INFO: Verifying event with AI: Tomorrowland
+INFO: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+DEBUG: Verifying Tomorrowland...
+DEBUG: Result: {'is_real': True, 'official_name': 'Tomorrowland', 'ticket_types': ['Weekend Ticket', 'Day Ticket (Friday)', 'Day Ticket (Saturday)', 'Day Ticket (Sunday)', 'Camping', 'Global Journey Package'], 'ambiguous': False, 'reasoning': 'Tomorrowland is a well-known electronic dance music festival held annually in Belgium.'}
+2026-02-19 21:11:02,271 INFO sqlalchemy.engine.Engine INSERT INTO ai_logs (phone, raw_message, ai_response, intent, confidence, classification_method, prompt_version) VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id, created_at
+INFO: INSERT INTO ai_logs (phone, raw_message, ai_response, intent, confidence, classification_method, prompt_version) VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id, created_at
+2026-02-19 21:11:02,271 INFO sqlalchemy.engine.Engine [generated in 0.00060s] ('+316TESTBUYER', 'Ik zoek 1 ticket voor Tomorrowland 2026', '{"intent": "BUY_REQUEST", "event_name": "Tomorrowland", "event_date": null, "ticket_type": null, "quantity": 1, "price_per_ticket": null, "max_price": null, "missing_fields": ["event_date", "ticket_type", "price_per_ticket", "max_price"], "confidence": 0.8}', 'BUY_REQUEST', 0.8, 'AI', 'v1.0')
+INFO: [generated in 0.00060s] ('+316TESTBUYER', 'Ik zoek 1 ticket voor Tomorrowland 2026', '{"intent": "BUY_REQUEST", "event_name": "Tomorrowland", "event_date": null, "ticket_type": null, "quantity": 1, "price_per_ticket": null, "max_price": null, "missing_fields": ["event_date", "ticket_type", "price_per_ticket", "max_price"], "confidence": 0.8}', 'BUY_REQUEST', 0.8, 'AI', 'v1.0')
+2026-02-19 21:11:02,273 INFO sqlalchemy.engine.Engine SELECT chat_sessions.id, chat_sessions.phone, chat_sessions.current_intent, chat_sessions.current_step, chat_sessions.collected_data, chat_sessions.last_updated, chat_sessions.created_at 
+FROM chat_sessions 
+WHERE chat_sessions.phone = ?
+INFO: SELECT chat_sessions.id, chat_sessions.phone, chat_sessions.current_intent, chat_sessions.current_step, chat_sessions.collected_data, chat_sessions.last_updated, chat_sessions.created_at 
+FROM chat_sessions 
+WHERE chat_sessions.phone = ?
+2026-02-19 21:11:02,274 INFO sqlalchemy.engine.Engine [cached since 5.511s ago] ('+316TESTBUYER',)
+INFO: [cached since 5.511s ago] ('+316TESTBUYER',)
+2026-02-19 21:11:02,276 INFO sqlalchemy.engine.Engine UPDATE chat_sessions SET current_intent=?, current_step=?, collected_data=?, last_updated=CURRENT_TIMESTAMP WHERE chat_sessions.id = ?
+INFO: UPDATE chat_sessions SET current_intent=?, current_step=?, collected_data=?, last_updated=CURRENT_TIMESTAMP WHERE chat_sessions.id = ?
+2026-02-19 21:11:02,276 INFO sqlalchemy.engine.Engine [generated in 0.00021s] ('BUY_REQUEST', 'COLLECTING', '{"intent": "BUY_REQUEST", "event_name": "Tomorrowland", "event_date": null, "ticket_type": null, "quantity": 1, "price_per_ticket": null, "max_price" ... (123 characters truncated) ... rue, "_ticket_types": ["Weekend Ticket", "Day Ticket (Friday)", "Day Ticket (Saturday)", "Day Ticket (Sunday)", "Camping", "Global Journey Package"]}', 30)
+INFO: [generated in 0.00021s] ('BUY_REQUEST', 'COLLECTING', '{"intent": "BUY_REQUEST", "event_name": "Tomorrowland", "event_date": null, "ticket_type": null, "quantity": 1, "price_per_ticket": null, "max_price" ... (123 characters truncated) ... rue, "_ticket_types": ["Weekend Ticket", "Day Ticket (Friday)", "Day Ticket (Saturday)", "Day Ticket (Sunday)", "Camping", "Global Journey Package"]}', 30)
+2026-02-19 21:11:02,277 INFO sqlalchemy.engine.Engine SELECT chat_sessions.id, chat_sessions.phone, chat_sessions.current_intent, chat_sessions.current_step, chat_sessions.collected_data, chat_sessions.last_updated, chat_sessions.created_at 
+FROM chat_sessions 
+WHERE chat_sessions.id = ?
+INFO: SELECT chat_sessions.id, chat_sessions.phone, chat_sessions.current_intent, chat_sessions.current_step, chat_sessions.collected_data, chat_sessions.last_updated, chat_sessions.created_at 
+FROM chat_sessions 
+WHERE chat_sessions.id = ?
+2026-02-19 21:11:02,277 INFO sqlalchemy.engine.Engine [cached since 5.513s ago] (30,)
+INFO: [cached since 5.513s ago] (30,)
+BOT: Voor Tomorrowland zijn er verschillende tickets: Weekend Ticket, Day Ticket (Friday), Day Ticket (Saturday). Gaat het om een Weekend of Dagkaart?
+USER (+316TESTBUYER): Weekend
+2026-02-19 21:11:02,780 INFO sqlalchemy.engine.Engine SELECT chat_sessions.id, chat_sessions.phone, chat_sessions.current_intent, chat_sessions.current_step, chat_sessions.collected_data, chat_sessions.last_updated, chat_sessions.created_at 
+FROM chat_sessions 
+WHERE chat_sessions.phone = ?
+INFO: SELECT chat_sessions.id, chat_sessions.phone, chat_sessions.current_intent, chat_sessions.current_step, chat_sessions.collected_data, chat_sessions.last_updated, chat_sessions.created_at 
+FROM chat_sessions 
+WHERE chat_sessions.phone = ?
+2026-02-19 21:11:02,781 INFO sqlalchemy.engine.Engine [cached since 6.019s ago] ('+316TESTBUYER',)
+INFO: [cached since 6.019s ago] ('+316TESTBUYER',)
+INFO: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO: AI classified message as: UNKNOWN (confidence: 0.5)
+2026-02-19 21:11:05,103 INFO sqlalchemy.engine.Engine INSERT INTO ai_logs (phone, raw_message, ai_response, intent, confidence, classification_method, prompt_version) VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id, created_at
+INFO: INSERT INTO ai_logs (phone, raw_message, ai_response, intent, confidence, classification_method, prompt_version) VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id, created_at
+2026-02-19 21:11:05,103 INFO sqlalchemy.engine.Engine [cached since 2.833s ago] ('+316TESTBUYER', 'Weekend', '{"intent": "UNKNOWN", "event_name": null, "event_date": null, "ticket_type": "Weekend", "quantity": null, "price_per_ticket": null, "max_price": null, "missing_fields": ["event_name", "event_date", "quantity", "price_per_ticket", "max_price"], "confidence": 0.5}', 'UNKNOWN', 0.5, 'AI', 'v1.0')
+INFO: [cached since 2.833s ago] ('+316TESTBUYER', 'Weekend', '{"intent": "UNKNOWN", "event_name": null, "event_date": null, "ticket_type": "Weekend", "quantity": null, "price_per_ticket": null, "max_price": null, "missing_fields": ["event_name", "event_date", "quantity", "price_per_ticket", "max_price"], "confidence": 0.5}', 'UNKNOWN', 0.5, 'AI', 'v1.0')
+2026-02-19 21:11:05,104 INFO sqlalchemy.engine.Engine SELECT chat_sessions.id, chat_sessions.phone, chat_sessions.current_intent, chat_sessions.current_step, chat_sessions.collected_data, chat_sessions.last_updated, chat_sessions.created_at 
+FROM chat_sessions 
+WHERE chat_sessions.phone = ?
+INFO: SELECT chat_sessions.id, chat_sessions.phone, chat_sessions.current_intent, chat_sessions.current_step, chat_sessions.collected_data, chat_sessions.last_updated, chat_sessions.created_at 
+FROM chat_sessions 
+WHERE chat_sessions.phone = ?
+2026-02-19 21:11:05,104 INFO sqlalchemy.engine.Engine [cached since 8.342s ago] ('+316TESTBUYER',)
+INFO: [cached since 8.342s ago] ('+316TESTBUYER',)
+2026-02-19 21:11:05,105 INFO sqlalchemy.engine.Engine UPDATE chat_sessions SET collected_data=?, last_updated=CURRENT_TIMESTAMP WHERE chat_sessions.id = ?
+INFO: UPDATE chat_sessions SET collected_data=?, last_updated=CURRENT_TIMESTAMP WHERE chat_sessions.id = ?
+2026-02-19 21:11:05,105 INFO sqlalchemy.engine.Engine [generated in 0.00013s] ('{"intent": "BUY_REQUEST", "event_name": "Tomorrowland", "event_date": null, "ticket_type": "Weekend", "quantity": 1, "price_per_ticket": null, "max_p ... (128 characters truncated) ... rue, "_ticket_types": ["Weekend Ticket", "Day Ticket (Friday)", "Day Ticket (Saturday)", "Day Ticket (Sunday)", "Camping", "Global Journey Package"]}', 30)
+INFO: [generated in 0.00013s] ('{"intent": "BUY_REQUEST", "event_name": "Tomorrowland", "event_date": null, "ticket_type": "Weekend", "quantity": 1, "price_per_ticket": null, "max_p ... (128 characters truncated) ... rue, "_ticket_types": ["Weekend Ticket", "Day Ticket (Friday)", "Day Ticket (Saturday)", "Day Ticket (Sunday)", "Camping", "Global Journey Package"]}', 30)
+2026-02-19 21:11:05,106 INFO sqlalchemy.engine.Engine SELECT chat_sessions.id, chat_sessions.phone, chat_sessions.current_intent, chat_sessions.current_step, chat_sessions.collected_data, chat_sessions.last_updated, chat_sessions.created_at 
+FROM chat_sessions 
+WHERE chat_sessions.id = ?
+INFO: SELECT chat_sessions.id, chat_sessions.phone, chat_sessions.current_intent, chat_sessions.current_step, chat_sessions.collected_data, chat_sessions.last_updated, chat_sessions.created_at 
+FROM chat_sessions 
+WHERE chat_sessions.id = ?
+2026-02-19 21:11:05,106 INFO sqlalchemy.engine.Engine [cached since 8.342s ago] (30,)
+INFO: [cached since 8.342s ago] (30,)
+BOT: Op welke datum is het evenement?
+USER (+316TESTBUYER): 25 juli
+2026-02-19 21:11:05,608 INFO sqlalchemy.engine.Engine SELECT chat_sessions.id, chat_sessions.phone, chat_sessions.current_intent, chat_sessions.current_step, chat_sessions.collected_data, chat_sessions.last_updated, chat_sessions.created_at 
+FROM chat_sessions 
+WHERE chat_sessions.phone = ?
+INFO: SELECT chat_sessions.id, chat_sessions.phone, chat_sessions.current_intent, chat_sessions.current_step, chat_sessions.collected_data, chat_sessions.last_updated, chat_sessions.created_at 
+FROM chat_sessions 
+WHERE chat_sessions.phone = ?
+2026-02-19 21:11:05,609 INFO sqlalchemy.engine.Engine [cached since 8.847s ago] ('+316TESTBUYER',)
+INFO: [cached since 8.847s ago] ('+316TESTBUYER',)
+INFO: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO: AI classified message as: UNKNOWN (confidence: 0.0)
+2026-02-19 21:11:08,044 INFO sqlalchemy.engine.Engine INSERT INTO ai_logs (phone, raw_message, ai_response, intent, confidence, classification_method, prompt_version) VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id, created_at
+INFO: INSERT INTO ai_logs (phone, raw_message, ai_response, intent, confidence, classification_method, prompt_version) VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id, created_at
+2026-02-19 21:11:08,044 INFO sqlalchemy.engine.Engine [cached since 5.774s ago] ('+316TESTBUYER', '25 juli', '{"intent": "UNKNOWN", "event_name": null, "event_date": "2023-07-25", "ticket_type": null, "quantity": null, "price_per_ticket": null, "max_price": null, "missing_fields": ["intent", "ticket_type", "quantity", "price_per_ticket", "max_price"], "confidence": 0.0}', 'UNKNOWN', 0.0, 'AI', 'v1.0')
+INFO: [cached since 5.774s ago] ('+316TESTBUYER', '25 juli', '{"intent": "UNKNOWN", "event_name": null, "event_date": "2023-07-25", "ticket_type": null, "quantity": null, "price_per_ticket": null, "max_price": null, "missing_fields": ["intent", "ticket_type", "quantity", "price_per_ticket", "max_price"], "confidence": 0.0}', 'UNKNOWN', 0.0, 'AI', 'v1.0')
+2026-02-19 21:11:08,046 INFO sqlalchemy.engine.Engine SELECT chat_sessions.id, chat_sessions.phone, chat_sessions.current_intent, chat_sessions.current_step, chat_sessions.collected_data, chat_sessions.last_updated, chat_sessions.created_at 
+FROM chat_sessions 
+WHERE chat_sessions.phone = ?
+INFO: SELECT chat_sessions.id, chat_sessions.phone, chat_sessions.current_intent, chat_sessions.current_step, chat_sessions.collected_data, chat_sessions.last_updated, chat_sessions.created_at 
+FROM chat_sessions 
+WHERE chat_sessions.phone = ?
+2026-02-19 21:11:08,046 INFO sqlalchemy.engine.Engine [cached since 11.28s ago] ('+316TESTBUYER',)
+INFO: [cached since 11.28s ago] ('+316TESTBUYER',)
+2026-02-19 21:11:08,047 INFO sqlalchemy.engine.Engine UPDATE chat_sessions SET current_step=?, collected_data=?, last_updated=CURRENT_TIMESTAMP WHERE chat_sessions.id = ?
+INFO: UPDATE chat_sessions SET current_step=?, collected_data=?, last_updated=CURRENT_TIMESTAMP WHERE chat_sessions.id = ?
+2026-02-19 21:11:08,047 INFO sqlalchemy.engine.Engine [generated in 0.00020s] ('CONFIRMING', '{"intent": "BUY_REQUEST", "event_name": "Tomorrowland", "event_date": "2023-07-25", "ticket_type": "Weekend", "quantity": 1, "price_per_ticket": null ... (136 characters truncated) ... rue, "_ticket_types": ["Weekend Ticket", "Day Ticket (Friday)", "Day Ticket (Saturday)", "Day Ticket (Sunday)", "Camping", "Global Journey Package"]}', 30)
+INFO: [generated in 0.00020s] ('CONFIRMING', '{"intent": "BUY_REQUEST", "event_name": "Tomorrowland", "event_date": "2023-07-25", "ticket_type": "Weekend", "quantity": 1, "price_per_ticket": null ... (136 characters truncated) ... rue, "_ticket_types": ["Weekend Ticket", "Day Ticket (Friday)", "Day Ticket (Saturday)", "Day Ticket (Sunday)", "Camping", "Global Journey Package"]}', 30)
+2026-02-19 21:11:08,048 INFO sqlalchemy.engine.Engine SELECT chat_sessions.id, chat_sessions.phone, chat_sessions.current_intent, chat_sessions.current_step, chat_sessions.collected_data, chat_sessions.last_updated, chat_sessions.created_at 
+FROM chat_sessions 
+WHERE chat_sessions.id = ?
+INFO: SELECT chat_sessions.id, chat_sessions.phone, chat_sessions.current_intent, chat_sessions.current_step, chat_sessions.collected_data, chat_sessions.last_updated, chat_sessions.created_at 
+FROM chat_sessions 
+WHERE chat_sessions.id = ?
+2026-02-19 21:11:08,049 INFO sqlalchemy.engine.Engine [cached since 11.28s ago] (30,)
+INFO: [cached since 11.28s ago] (30,)
+BOT: 📋 Kloppen deze gegevens?
+
+🎟️ Evenement: Tomorrowland (Weekend)
+📅 Datum: 2023-07-25
+🔢 Aantal: 1
+
+Typ 'ja' om te bevestigen of 'nee' om opnieuw te beginnen.
+USER (+316TESTBUYER): ja
+2026-02-19 21:11:08,552 INFO sqlalchemy.engine.Engine SELECT chat_sessions.id, chat_sessions.phone, chat_sessions.current_intent, chat_sessions.current_step, chat_sessions.collected_data, chat_sessions.last_updated, chat_sessions.created_at 
+FROM chat_sessions 
+WHERE chat_sessions.phone = ?
+INFO: SELECT chat_sessions.id, chat_sessions.phone, chat_sessions.current_intent, chat_sessions.current_step, chat_sessions.collected_data, chat_sessions.last_updated, chat_sessions.created_at 
+FROM chat_sessions 
+WHERE chat_sessions.phone = ?
+2026-02-19 21:11:08,552 INFO sqlalchemy.engine.Engine [cached since 11.79s ago] ('+316TESTBUYER',)
+INFO: [cached since 11.79s ago] ('+316TESTBUYER',)
+INFO: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO: AI classified message as: UNKNOWN (confidence: 0.0)
+2026-02-19 21:11:10,789 INFO sqlalchemy.engine.Engine INSERT INTO ai_logs (phone, raw_message, ai_response, intent, confidence, classification_method, prompt_version) VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id, created_at
+INFO: INSERT INTO ai_logs (phone, raw_message, ai_response, intent, confidence, classification_method, prompt_version) VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id, created_at
+2026-02-19 21:11:10,790 INFO sqlalchemy.engine.Engine [cached since 8.519s ago] ('+316TESTBUYER', 'ja', '{"intent": "UNKNOWN", "event_name": null, "event_date": null, "ticket_type": null, "quantity": null, "price_per_ticket": null, "max_price": null, "missing_fields": ["event_name", "event_date", "ticket_type", "quantity", "price_per_ticket", "max_price"], "confidence": 0.0}', 'UNKNOWN', 0.0, 'AI', 'v1.0')
+INFO: [cached since 8.519s ago] ('+316TESTBUYER', 'ja', '{"intent": "UNKNOWN", "event_name": null, "event_date": null, "ticket_type": null, "quantity": null, "price_per_ticket": null, "max_price": null, "missing_fields": ["event_name", "event_date", "ticket_type", "quantity", "price_per_ticket", "max_price"], "confidence": 0.0}', 'UNKNOWN', 0.0, 'AI', 'v1.0')
+2026-02-19 21:11:10,793 INFO sqlalchemy.engine.Engine INSERT INTO buy_requests (timestamp, first_name, last_name, phone, email, instagram, gender, birth_date, city, postcode, event_name, event_date, quantity, max_price_per_ticket, agreement_accepted, source, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id, created_at, updated_at
+INFO: INSERT INTO buy_requests (timestamp, first_name, last_name, phone, email, instagram, gender, birth_date, city, postcode, event_name, event_date, quantity, max_price_per_ticket, agreement_accepted, source, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id, created_at, updated_at
+2026-02-19 21:11:10,793 INFO sqlalchemy.engine.Engine [generated in 0.00042s] (None, 'WhatsApp User', None, '+316TESTBUYER', None, None, None, None, None, None, 'Tomorrowland (Weekend)', '2023-07-25', 1, None, 0, 'WHATSAPP', 'WAITING')
+INFO: [generated in 0.00042s] (None, 'WhatsApp User', None, '+316TESTBUYER', None, None, None, None, None, None, 'Tomorrowland (Weekend)', '2023-07-25', 1, None, 0, 'WHATSAPP', 'WAITING')
+2026-02-19 21:11:10,797 INFO sqlalchemy.engine.Engine SELECT buy_requests.id, buy_requests.timestamp, buy_requests.first_name, buy_requests.last_name, buy_requests.phone, buy_requests.email, buy_requests.instagram, buy_requests.gender, buy_requests.birth_date, buy_requests.city, buy_requests.postcode, buy_requests.event_name, buy_requests.event_date, buy_requests.quantity, buy_requests.max_price_per_ticket, buy_requests.agreement_accepted, buy_requests.source, buy_requests.status, buy_requests.created_at, buy_requests.updated_at 
+FROM buy_requests 
+WHERE buy_requests.id = ?
+INFO: SELECT buy_requests.id, buy_requests.timestamp, buy_requests.first_name, buy_requests.last_name, buy_requests.phone, buy_requests.email, buy_requests.instagram, buy_requests.gender, buy_requests.birth_date, buy_requests.city, buy_requests.postcode, buy_requests.event_name, buy_requests.event_date, buy_requests.quantity, buy_requests.max_price_per_ticket, buy_requests.agreement_accepted, buy_requests.source, buy_requests.status, buy_requests.created_at, buy_requests.updated_at 
+FROM buy_requests 
+WHERE buy_requests.id = ?
+2026-02-19 21:11:10,797 INFO sqlalchemy.engine.Engine [generated in 0.00024s] (33,)
+INFO: [generated in 0.00024s] (33,)
+2026-02-19 21:11:10,798 INFO sqlalchemy.engine.Engine SELECT chat_sessions.id, chat_sessions.phone, chat_sessions.current_intent, chat_sessions.current_step, chat_sessions.collected_data, chat_sessions.last_updated, chat_sessions.created_at 
+FROM chat_sessions 
+WHERE chat_sessions.phone = ?
+INFO: SELECT chat_sessions.id, chat_sessions.phone, chat_sessions.current_intent, chat_sessions.current_step, chat_sessions.collected_data, chat_sessions.last_updated, chat_sessions.created_at 
+FROM chat_sessions 
+WHERE chat_sessions.phone = ?
+2026-02-19 21:11:10,798 INFO sqlalchemy.engine.Engine [cached since 14.04s ago] ('+316TESTBUYER',)
+INFO: [cached since 14.04s ago] ('+316TESTBUYER',)
+2026-02-19 21:11:10,799 INFO sqlalchemy.engine.Engine UPDATE chat_sessions SET current_step=?, collected_data=?, last_updated=CURRENT_TIMESTAMP WHERE chat_sessions.id = ?
+INFO: UPDATE chat_sessions SET current_step=?, collected_data=?, last_updated=CURRENT_TIMESTAMP WHERE chat_sessions.id = ?
+2026-02-19 21:11:10,799 INFO sqlalchemy.engine.Engine [cached since 2.752s ago] ('IDLE', '{}', 30)
+INFO: [cached since 2.752s ago] ('IDLE', '{}', 30)
+2026-02-19 21:11:10,800 INFO sqlalchemy.engine.Engine SELECT chat_sessions.id, chat_sessions.phone, chat_sessions.current_intent, chat_sessions.current_step, chat_sessions.collected_data, chat_sessions.last_updated, chat_sessions.created_at 
+FROM chat_sessions 
+WHERE chat_sessions.id = ?
+INFO: SELECT chat_sessions.id, chat_sessions.phone, chat_sessions.current_intent, chat_sessions.current_step, chat_sessions.collected_data, chat_sessions.last_updated, chat_sessions.created_at 
+FROM chat_sessions 
+WHERE chat_sessions.id = ?
+2026-02-19 21:11:10,800 INFO sqlalchemy.engine.Engine [cached since 14.04s ago] (30,)
+INFO: [cached since 14.04s ago] (30,)
+2026-02-19 21:11:10,804 INFO sqlalchemy.engine.Engine SELECT sell_offers.id, sell_offers.timestamp, sell_offers.first_name, sell_offers.last_name, sell_offers.phone, sell_offers.email, sell_offers.instagram, sell_offers.gender, sell_offers.birth_date, sell_offers.city, sell_offers.postcode, sell_offers.event_name, sell_offers.event_date, sell_offers.quantity, sell_offers.price_per_ticket, sell_offers.total_price, sell_offers.sale_type, sell_offers.ticket_source, sell_offers.section, sell_offers."row", sell_offers.seat_numbers, sell_offers.proof_url, sell_offers.agreement_accepted, sell_offers.verification_status, sell_offers.status, sell_offers.created_at, sell_offers.updated_at 
+FROM sell_offers 
+WHERE sell_offers.status = ? AND lower(sell_offers.event_name) LIKE lower(?) AND sell_offers.quantity >= ? ORDER BY sell_offers.price_per_ticket ASC
+INFO: SELECT sell_offers.id, sell_offers.timestamp, sell_offers.first_name, sell_offers.last_name, sell_offers.phone, sell_offers.email, sell_offers.instagram, sell_offers.gender, sell_offers.birth_date, sell_offers.city, sell_offers.postcode, sell_offers.event_name, sell_offers.event_date, sell_offers.quantity, sell_offers.price_per_ticket, sell_offers.total_price, sell_offers.sale_type, sell_offers.ticket_source, sell_offers.section, sell_offers."row", sell_offers.seat_numbers, sell_offers.proof_url, sell_offers.agreement_accepted, sell_offers.verification_status, sell_offers.status, sell_offers.created_at, sell_offers.updated_at 
+FROM sell_offers 
+WHERE sell_offers.status = ? AND lower(sell_offers.event_name) LIKE lower(?) AND sell_offers.quantity >= ? ORDER BY sell_offers.price_per_ticket ASC
+2026-02-19 21:11:10,804 INFO sqlalchemy.engine.Engine [generated in 0.00026s] ('AVAILABLE', '%Tomorrowland%', 1)
+INFO: [generated in 0.00026s] ('AVAILABLE', '%Tomorrowland%', 1)
+INFO: Found 0 matches for 'Tomorrowland' (qty=1)
+INFO: Search broadcast sent to +918087847607
+INFO: Step 2: Seller lists matching ticket
+INFO: --- Conversation with +316TESTSELLER ---
+
+[MOCK WHATSAPP] To: +918087847607 | Body: 🚨 *OP ZOEK* 🚨
+
+🎟️ Tomorrowland
+🗓️ 2023-07-25
+📈 1 ticket(s)
+📥 Bericht _dit nummer_ als je deze tickets hebt en wilt verkopen!
+
+BOT: ✅ Je zoekopdracht is opgeslagen! We hebben je vraag doorgezet naar ons netwerk. We laten je weten zodra er tickets beschikbaar zijn.
+USER (+316TESTSELLER): Ik heb 1 ticket te koop voor Tomorrowland 2026
+2026-02-19 21:11:11,309 INFO sqlalchemy.engine.Engine SELECT chat_sessions.id, chat_sessions.phone, chat_sessions.current_intent, chat_sessions.current_step, chat_sessions.collected_data, chat_sessions.last_updated, chat_sessions.created_at 
+FROM chat_sessions 
+WHERE chat_sessions.phone = ?
+INFO: SELECT chat_sessions.id, chat_sessions.phone, chat_sessions.current_intent, chat_sessions.current_step, chat_sessions.collected_data, chat_sessions.last_updated, chat_sessions.created_at 
+FROM chat_sessions 
+WHERE chat_sessions.phone = ?
+2026-02-19 21:11:11,309 INFO sqlalchemy.engine.Engine [cached since 14.55s ago] ('+316TESTSELLER',)
+INFO: [cached since 14.55s ago] ('+316TESTSELLER',)
+2026-02-19 21:11:11,311 INFO sqlalchemy.engine.Engine INSERT INTO chat_sessions (phone, current_intent, current_step, collected_data) VALUES (?, ?, ?, ?) RETURNING id, last_updated, created_at
+INFO: INSERT INTO chat_sessions (phone, current_intent, current_step, collected_data) VALUES (?, ?, ?, ?) RETURNING id, last_updated, created_at
+2026-02-19 21:11:11,312 INFO sqlalchemy.engine.Engine [cached since 14.55s ago] ('+316TESTSELLER', None, 'IDLE', '{}')
+INFO: [cached since 14.55s ago] ('+316TESTSELLER', None, 'IDLE', '{}')
+2026-02-19 21:11:11,313 INFO sqlalchemy.engine.Engine SELECT chat_sessions.id, chat_sessions.phone, chat_sessions.current_intent, chat_sessions.current_step, chat_sessions.collected_data, chat_sessions.last_updated, chat_sessions.created_at 
+FROM chat_sessions 
+WHERE chat_sessions.id = ?
+INFO: SELECT chat_sessions.id, chat_sessions.phone, chat_sessions.current_intent, chat_sessions.current_step, chat_sessions.collected_data, chat_sessions.last_updated, chat_sessions.created_at 
+FROM chat_sessions 
+WHERE chat_sessions.id = ?
+2026-02-19 21:11:11,313 INFO sqlalchemy.engine.Engine [cached since 14.55s ago] (31,)
+INFO: [cached since 14.55s ago] (31,)
+INFO: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO: AI classified message as: SELL_OFFER (confidence: 0.9)
+INFO: Verifying event with AI: Tomorrowland
+INFO: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+DEBUG: Verifying Tomorrowland...
+DEBUG: Result: {'is_real': True, 'official_name': 'Tomorrowland', 'ticket_types': ['Weekend Ticket', 'Day Ticket (Friday)', 'Day Ticket (Saturday)', 'Day Ticket (Sunday)', 'Camping', 'Global Journey Package'], 'ambiguous': False, 'reasoning': 'Tomorrowland is a well-known electronic dance music festival held annually in Belgium.'}
+2026-02-19 21:11:15,899 INFO sqlalchemy.engine.Engine INSERT INTO ai_logs (phone, raw_message, ai_response, intent, confidence, classification_method, prompt_version) VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id, created_at
+INFO: INSERT INTO ai_logs (phone, raw_message, ai_response, intent, confidence, classification_method, prompt_version) VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id, created_at
+2026-02-19 21:11:15,899 INFO sqlalchemy.engine.Engine [cached since 13.63s ago] ('+316TESTSELLER', 'Ik heb 1 ticket te koop voor Tomorrowland 2026', '{"intent": "SELL_OFFER", "event_name": "Tomorrowland", "event_date": null, "ticket_type": null, "quantity": 1, "price_per_ticket": null, "max_price": null, "missing_fields": ["event_date", "ticket_type", "price_per_ticket", "max_price"], "confidence": 0.9}', 'SELL_OFFER', 0.9, 'AI', 'v1.0')
+INFO: [cached since 13.63s ago] ('+316TESTSELLER', 'Ik heb 1 ticket te koop voor Tomorrowland 2026', '{"intent": "SELL_OFFER", "event_name": "Tomorrowland", "event_date": null, "ticket_type": null, "quantity": 1, "price_per_ticket": null, "max_price": null, "missing_fields": ["event_date", "ticket_type", "price_per_ticket", "max_price"], "confidence": 0.9}', 'SELL_OFFER', 0.9, 'AI', 'v1.0')
+2026-02-19 21:11:15,900 INFO sqlalchemy.engine.Engine SELECT chat_sessions.id, chat_sessions.phone, chat_sessions.current_intent, chat_sessions.current_step, chat_sessions.collected_data, chat_sessions.last_updated, chat_sessions.created_at 
+FROM chat_sessions 
+WHERE chat_sessions.phone = ?
+INFO: SELECT chat_sessions.id, chat_sessions.phone, chat_sessions.current_intent, chat_sessions.current_step, chat_sessions.collected_data, chat_sessions.last_updated, chat_sessions.created_at 
+FROM chat_sessions 
+WHERE chat_sessions.phone = ?
+2026-02-19 21:11:15,900 INFO sqlalchemy.engine.Engine [cached since 19.14s ago] ('+316TESTSELLER',)
+INFO: [cached since 19.14s ago] ('+316TESTSELLER',)
+2026-02-19 21:11:15,901 INFO sqlalchemy.engine.Engine UPDATE chat_sessions SET current_intent=?, current_step=?, collected_data=?, last_updated=CURRENT_TIMESTAMP WHERE chat_sessions.id = ?
+INFO: UPDATE chat_sessions SET current_intent=?, current_step=?, collected_data=?, last_updated=CURRENT_TIMESTAMP WHERE chat_sessions.id = ?
+2026-02-19 21:11:15,901 INFO sqlalchemy.engine.Engine [cached since 13.63s ago] ('SELL_OFFER', 'COLLECTING', '{"intent": "SELL_OFFER", "event_name": "Tomorrowland", "event_date": null, "ticket_type": null, "quantity": 1, "price_per_ticket": null, "max_price": ... (122 characters truncated) ... rue, "_ticket_types": ["Weekend Ticket", "Day Ticket (Friday)", "Day Ticket (Saturday)", "Day Ticket (Sunday)", "Camping", "Global Journey Package"]}', 31)
+INFO: [cached since 13.63s ago] ('SELL_OFFER', 'COLLECTING', '{"intent": "SELL_OFFER", "event_name": "Tomorrowland", "event_date": null, "ticket_type": null, "quantity": 1, "price_per_ticket": null, "max_price": ... (122 characters truncated) ... rue, "_ticket_types": ["Weekend Ticket", "Day Ticket (Friday)", "Day Ticket (Saturday)", "Day Ticket (Sunday)", "Camping", "Global Journey Package"]}', 31)
+2026-02-19 21:11:15,902 INFO sqlalchemy.engine.Engine SELECT chat_sessions.id, chat_sessions.phone, chat_sessions.current_intent, chat_sessions.current_step, chat_sessions.collected_data, chat_sessions.last_updated, chat_sessions.created_at 
+FROM chat_sessions 
+WHERE chat_sessions.id = ?
+INFO: SELECT chat_sessions.id, chat_sessions.phone, chat_sessions.current_intent, chat_sessions.current_step, chat_sessions.collected_data, chat_sessions.last_updated, chat_sessions.created_at 
+FROM chat_sessions 
+WHERE chat_sessions.id = ?
+2026-02-19 21:11:15,902 INFO sqlalchemy.engine.Engine [cached since 19.14s ago] (31,)
+INFO: [cached since 19.14s ago] (31,)
+BOT: Voor Tomorrowland zijn er verschillende tickets: Weekend Ticket, Day Ticket (Friday), Day Ticket (Saturday). Gaat het om een Weekend of Dagkaart?
+USER (+316TESTSELLER): Weekend
+2026-02-19 21:11:16,405 INFO sqlalchemy.engine.Engine SELECT chat_sessions.id, chat_sessions.phone, chat_sessions.current_intent, chat_sessions.current_step, chat_sessions.collected_data, chat_sessions.last_updated, chat_sessions.created_at 
+FROM chat_sessions 
+WHERE chat_sessions.phone = ?
+INFO: SELECT chat_sessions.id, chat_sessions.phone, chat_sessions.current_intent, chat_sessions.current_step, chat_sessions.collected_data, chat_sessions.last_updated, chat_sessions.created_at 
+FROM chat_sessions 
+WHERE chat_sessions.phone = ?
+2026-02-19 21:11:16,405 INFO sqlalchemy.engine.Engine [cached since 19.64s ago] ('+316TESTSELLER',)
+INFO: [cached since 19.64s ago] ('+316TESTSELLER',)
+INFO: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO: AI classified message as: UNKNOWN (confidence: 0.5)
+2026-02-19 21:11:18,797 INFO sqlalchemy.engine.Engine INSERT INTO ai_logs (phone, raw_message, ai_response, intent, confidence, classification_method, prompt_version) VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id, created_at
+INFO: INSERT INTO ai_logs (phone, raw_message, ai_response, intent, confidence, classification_method, prompt_version) VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id, created_at
+2026-02-19 21:11:18,797 INFO sqlalchemy.engine.Engine [cached since 16.53s ago] ('+316TESTSELLER', 'Weekend', '{"intent": "UNKNOWN", "event_name": null, "event_date": null, "ticket_type": "Weekend", "quantity": null, "price_per_ticket": null, "max_price": null, "missing_fields": ["event_name", "event_date", "quantity", "price_per_ticket", "max_price"], "confidence": 0.5}', 'UNKNOWN', 0.5, 'AI', 'v1.0')
+INFO: [cached since 16.53s ago] ('+316TESTSELLER', 'Weekend', '{"intent": "UNKNOWN", "event_name": null, "event_date": null, "ticket_type": "Weekend", "quantity": null, "price_per_ticket": null, "max_price": null, "missing_fields": ["event_name", "event_date", "quantity", "price_per_ticket", "max_price"], "confidence": 0.5}', 'UNKNOWN', 0.5, 'AI', 'v1.0')
+2026-02-19 21:11:18,799 INFO sqlalchemy.engine.Engine SELECT chat_sessions.id, chat_sessions.phone, chat_sessions.current_intent, chat_sessions.current_step, chat_sessions.collected_data, chat_sessions.last_updated, chat_sessions.created_at 
+FROM chat_sessions 
+WHERE chat_sessions.phone = ?
+INFO: SELECT chat_sessions.id, chat_sessions.phone, chat_sessions.current_intent, chat_sessions.current_step, chat_sessions.collected_data, chat_sessions.last_updated, chat_sessions.created_at 
+FROM chat_sessions 
+WHERE chat_sessions.phone = ?
+2026-02-19 21:11:18,799 INFO sqlalchemy.engine.Engine [cached since 22.04s ago] ('+316TESTSELLER',)
+INFO: [cached since 22.04s ago] ('+316TESTSELLER',)
+2026-02-19 21:11:18,800 INFO sqlalchemy.engine.Engine UPDATE chat_sessions SET collected_data=?, last_updated=CURRENT_TIMESTAMP WHERE chat_sessions.id = ?
+INFO: UPDATE chat_sessions SET collected_data=?, last_updated=CURRENT_TIMESTAMP WHERE chat_sessions.id = ?
+2026-02-19 21:11:18,800 INFO sqlalchemy.engine.Engine [cached since 13.69s ago] ('{"intent": "SELL_OFFER", "event_name": "Tomorrowland", "event_date": null, "ticket_type": "Weekend", "quantity": 1, "price_per_ticket": null, "max_pr ... (127 characters truncated) ... rue, "_ticket_types": ["Weekend Ticket", "Day Ticket (Friday)", "Day Ticket (Saturday)", "Day Ticket (Sunday)", "Camping", "Global Journey Package"]}', 31)
+INFO: [cached since 13.69s ago] ('{"intent": "SELL_OFFER", "event_name": "Tomorrowland", "event_date": null, "ticket_type": "Weekend", "quantity": 1, "price_per_ticket": null, "max_pr ... (127 characters truncated) ... rue, "_ticket_types": ["Weekend Ticket", "Day Ticket (Friday)", "Day Ticket (Saturday)", "Day Ticket (Sunday)", "Camping", "Global Journey Package"]}', 31)
+2026-02-19 21:11:18,800 INFO sqlalchemy.engine.Engine SELECT chat_sessions.id, chat_sessions.phone, chat_sessions.current_intent, chat_sessions.current_step, chat_sessions.collected_data, chat_sessions.last_updated, chat_sessions.created_at 
+FROM chat_sessions 
+WHERE chat_sessions.id = ?
+INFO: SELECT chat_sessions.id, chat_sessions.phone, chat_sessions.current_intent, chat_sessions.current_step, chat_sessions.collected_data, chat_sessions.last_updated, chat_sessions.created_at 
+FROM chat_sessions 
+WHERE chat_sessions.id = ?
+2026-02-19 21:11:18,800 INFO sqlalchemy.engine.Engine [cached since 22.04s ago] (31,)
+INFO: [cached since 22.04s ago] (31,)
+BOT: Op welke datum is het evenement?
+USER (+316TESTSELLER): 25 juli
+2026-02-19 21:11:19,303 INFO sqlalchemy.engine.Engine SELECT chat_sessions.id, chat_sessions.phone, chat_sessions.current_intent, chat_sessions.current_step, chat_sessions.collected_data, chat_sessions.last_updated, chat_sessions.created_at 
+FROM chat_sessions 
+WHERE chat_sessions.phone = ?
+INFO: SELECT chat_sessions.id, chat_sessions.phone, chat_sessions.current_intent, chat_sessions.current_step, chat_sessions.collected_data, chat_sessions.last_updated, chat_sessions.created_at 
+FROM chat_sessions 
+WHERE chat_sessions.phone = ?
+2026-02-19 21:11:19,304 INFO sqlalchemy.engine.Engine [cached since 22.54s ago] ('+316TESTSELLER',)
+INFO: [cached since 22.54s ago] ('+316TESTSELLER',)
+INFO: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO: AI classified message as: UNKNOWN (confidence: 0.0)
+2026-02-19 21:11:22,289 INFO sqlalchemy.engine.Engine INSERT INTO ai_logs (phone, raw_message, ai_response, intent, confidence, classification_method, prompt_version) VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id, created_at
+INFO: INSERT INTO ai_logs (phone, raw_message, ai_response, intent, confidence, classification_method, prompt_version) VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id, created_at
+2026-02-19 21:11:22,289 INFO sqlalchemy.engine.Engine [cached since 20.02s ago] ('+316TESTSELLER', '25 juli', '{"intent": "UNKNOWN", "event_name": null, "event_date": "2023-07-25", "ticket_type": null, "quantity": null, "price_per_ticket": null, "max_price": null, "missing_fields": ["intent", "ticket_type", "quantity", "price_per_ticket", "max_price"], "confidence": 0.0}', 'UNKNOWN', 0.0, 'AI', 'v1.0')
+INFO: [cached since 20.02s ago] ('+316TESTSELLER', '25 juli', '{"intent": "UNKNOWN", "event_name": null, "event_date": "2023-07-25", "ticket_type": null, "quantity": null, "price_per_ticket": null, "max_price": null, "missing_fields": ["intent", "ticket_type", "quantity", "price_per_ticket", "max_price"], "confidence": 0.0}', 'UNKNOWN', 0.0, 'AI', 'v1.0')
+2026-02-19 21:11:22,290 INFO sqlalchemy.engine.Engine SELECT chat_sessions.id, chat_sessions.phone, chat_sessions.current_intent, chat_sessions.current_step, chat_sessions.collected_data, chat_sessions.last_updated, chat_sessions.created_at 
+FROM chat_sessions 
+WHERE chat_sessions.phone = ?
+INFO: SELECT chat_sessions.id, chat_sessions.phone, chat_sessions.current_intent, chat_sessions.current_step, chat_sessions.collected_data, chat_sessions.last_updated, chat_sessions.created_at 
+FROM chat_sessions 
+WHERE chat_sessions.phone = ?
+2026-02-19 21:11:22,291 INFO sqlalchemy.engine.Engine [cached since 25.53s ago] ('+316TESTSELLER',)
+INFO: [cached since 25.53s ago] ('+316TESTSELLER',)
+2026-02-19 21:11:22,292 INFO sqlalchemy.engine.Engine UPDATE chat_sessions SET collected_data=?, last_updated=CURRENT_TIMESTAMP WHERE chat_sessions.id = ?
+INFO: UPDATE chat_sessions SET collected_data=?, last_updated=CURRENT_TIMESTAMP WHERE chat_sessions.id = ?
+2026-02-19 21:11:22,292 INFO sqlalchemy.engine.Engine [cached since 17.19s ago] ('{"intent": "SELL_OFFER", "event_name": "Tomorrowland", "event_date": "2023-07-25", "ticket_type": "Weekend", "quantity": 1, "price_per_ticket": null, ... (135 characters truncated) ... rue, "_ticket_types": ["Weekend Ticket", "Day Ticket (Friday)", "Day Ticket (Saturday)", "Day Ticket (Sunday)", "Camping", "Global Journey Package"]}', 31)
+INFO: [cached since 17.19s ago] ('{"intent": "SELL_OFFER", "event_name": "Tomorrowland", "event_date": "2023-07-25", "ticket_type": "Weekend", "quantity": 1, "price_per_ticket": null, ... (135 characters truncated) ... rue, "_ticket_types": ["Weekend Ticket", "Day Ticket (Friday)", "Day Ticket (Saturday)", "Day Ticket (Sunday)", "Camping", "Global Journey Package"]}', 31)
+2026-02-19 21:11:22,292 INFO sqlalchemy.engine.Engine SELECT chat_sessions.id, chat_sessions.phone, chat_sessions.current_intent, chat_sessions.current_step, chat_sessions.collected_data, chat_sessions.last_updated, chat_sessions.created_at 
+FROM chat_sessions 
+WHERE chat_sessions.id = ?
+INFO: SELECT chat_sessions.id, chat_sessions.phone, chat_sessions.current_intent, chat_sessions.current_step, chat_sessions.collected_data, chat_sessions.last_updated, chat_sessions.created_at 
+FROM chat_sessions 
+WHERE chat_sessions.id = ?
+2026-02-19 21:11:22,293 INFO sqlalchemy.engine.Engine [cached since 25.53s ago] (31,)
+INFO: [cached since 25.53s ago] (31,)
+BOT: Wat is de prijs per ticket?
+USER (+316TESTSELLER): 75 euro
+2026-02-19 21:11:22,796 INFO sqlalchemy.engine.Engine SELECT chat_sessions.id, chat_sessions.phone, chat_sessions.current_intent, chat_sessions.current_step, chat_sessions.collected_data, chat_sessions.last_updated, chat_sessions.created_at 
+FROM chat_sessions 
+WHERE chat_sessions.phone = ?
+INFO: SELECT chat_sessions.id, chat_sessions.phone, chat_sessions.current_intent, chat_sessions.current_step, chat_sessions.collected_data, chat_sessions.last_updated, chat_sessions.created_at 
+FROM chat_sessions 
+WHERE chat_sessions.phone = ?
+2026-02-19 21:11:22,796 INFO sqlalchemy.engine.Engine [cached since 26.03s ago] ('+316TESTSELLER',)
+INFO: [cached since 26.03s ago] ('+316TESTSELLER',)
+INFO: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO: AI classified message as: UNKNOWN (confidence: 0.5)
+2026-02-19 21:11:25,146 INFO sqlalchemy.engine.Engine INSERT INTO ai_logs (phone, raw_message, ai_response, intent, confidence, classification_method, prompt_version) VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id, created_at
+INFO: INSERT INTO ai_logs (phone, raw_message, ai_response, intent, confidence, classification_method, prompt_version) VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id, created_at
+2026-02-19 21:11:25,146 INFO sqlalchemy.engine.Engine [cached since 22.88s ago] ('+316TESTSELLER', '75 euro', '{"intent": "UNKNOWN", "event_name": null, "event_date": null, "ticket_type": null, "quantity": null, "price_per_ticket": 75, "max_price": null, "missing_fields": ["intent", "event_name", "event_date", "ticket_type", "quantity", "max_price"], "confidence": 0.5}', 'UNKNOWN', 0.5, 'AI', 'v1.0')
+INFO: [cached since 22.88s ago] ('+316TESTSELLER', '75 euro', '{"intent": "UNKNOWN", "event_name": null, "event_date": null, "ticket_type": null, "quantity": null, "price_per_ticket": 75, "max_price": null, "missing_fields": ["intent", "event_name", "event_date", "ticket_type", "quantity", "max_price"], "confidence": 0.5}', 'UNKNOWN', 0.5, 'AI', 'v1.0')
+2026-02-19 21:11:25,148 INFO sqlalchemy.engine.Engine SELECT chat_sessions.id, chat_sessions.phone, chat_sessions.current_intent, chat_sessions.current_step, chat_sessions.collected_data, chat_sessions.last_updated, chat_sessions.created_at 
+FROM chat_sessions 
+WHERE chat_sessions.phone = ?
+INFO: SELECT chat_sessions.id, chat_sessions.phone, chat_sessions.current_intent, chat_sessions.current_step, chat_sessions.collected_data, chat_sessions.last_updated, chat_sessions.created_at 
+FROM chat_sessions 
+WHERE chat_sessions.phone = ?
+2026-02-19 21:11:25,148 INFO sqlalchemy.engine.Engine [cached since 28.39s ago] ('+316TESTSELLER',)
+INFO: [cached since 28.39s ago] ('+316TESTSELLER',)
+2026-02-19 21:11:25,149 INFO sqlalchemy.engine.Engine UPDATE chat_sessions SET current_step=?, collected_data=?, last_updated=CURRENT_TIMESTAMP WHERE chat_sessions.id = ?
+INFO: UPDATE chat_sessions SET current_step=?, collected_data=?, last_updated=CURRENT_TIMESTAMP WHERE chat_sessions.id = ?
+2026-02-19 21:11:25,149 INFO sqlalchemy.engine.Engine [cached since 17.1s ago] ('CONFIRMING', '{"intent": "SELL_OFFER", "event_name": "Tomorrowland", "event_date": "2023-07-25", "ticket_type": "Weekend", "quantity": 1, "price_per_ticket": 75.0, ... (135 characters truncated) ... rue, "_ticket_types": ["Weekend Ticket", "Day Ticket (Friday)", "Day Ticket (Saturday)", "Day Ticket (Sunday)", "Camping", "Global Journey Package"]}', 31)
+INFO: [cached since 17.1s ago] ('CONFIRMING', '{"intent": "SELL_OFFER", "event_name": "Tomorrowland", "event_date": "2023-07-25", "ticket_type": "Weekend", "quantity": 1, "price_per_ticket": 75.0, ... (135 characters truncated) ... rue, "_ticket_types": ["Weekend Ticket", "Day Ticket (Friday)", "Day Ticket (Saturday)", "Day Ticket (Sunday)", "Camping", "Global Journey Package"]}', 31)
+2026-02-19 21:11:25,150 INFO sqlalchemy.engine.Engine SELECT chat_sessions.id, chat_sessions.phone, chat_sessions.current_intent, chat_sessions.current_step, chat_sessions.collected_data, chat_sessions.last_updated, chat_sessions.created_at 
+FROM chat_sessions 
+WHERE chat_sessions.id = ?
+INFO: SELECT chat_sessions.id, chat_sessions.phone, chat_sessions.current_intent, chat_sessions.current_step, chat_sessions.collected_data, chat_sessions.last_updated, chat_sessions.created_at 
+FROM chat_sessions 
+WHERE chat_sessions.id = ?
+2026-02-19 21:11:25,150 INFO sqlalchemy.engine.Engine [cached since 28.39s ago] (31,)
+INFO: [cached since 28.39s ago] (31,)
+BOT: 📋 Kloppen deze gegevens?
+
+🎟️ Evenement: Tomorrowland (Weekend)
+📅 Datum: 2023-07-25
+🔢 Aantal: 1
+💰 Prijs per ticket: €75.0
+
+Typ 'ja' om te bevestigen of 'nee' om opnieuw te beginnen.
+USER (+316TESTSELLER): ja
+2026-02-19 21:11:25,653 INFO sqlalchemy.engine.Engine SELECT chat_sessions.id, chat_sessions.phone, chat_sessions.current_intent, chat_sessions.current_step, chat_sessions.collected_data, chat_sessions.last_updated, chat_sessions.created_at 
+FROM chat_sessions 
+WHERE chat_sessions.phone = ?
+INFO: SELECT chat_sessions.id, chat_sessions.phone, chat_sessions.current_intent, chat_sessions.current_step, chat_sessions.collected_data, chat_sessions.last_updated, chat_sessions.created_at 
+FROM chat_sessions 
+WHERE chat_sessions.phone = ?
+2026-02-19 21:11:25,654 INFO sqlalchemy.engine.Engine [cached since 28.89s ago] ('+316TESTSELLER',)
+INFO: [cached since 28.89s ago] ('+316TESTSELLER',)
+INFO: HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO: AI classified message as: UNKNOWN (confidence: 0.0)
+2026-02-19 21:11:27,615 INFO sqlalchemy.engine.Engine INSERT INTO ai_logs (phone, raw_message, ai_response, intent, confidence, classification_method, prompt_version) VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id, created_at
+INFO: INSERT INTO ai_logs (phone, raw_message, ai_response, intent, confidence, classification_method, prompt_version) VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id, created_at
+2026-02-19 21:11:27,615 INFO sqlalchemy.engine.Engine [cached since 25.34s ago] ('+316TESTSELLER', 'ja', '{"intent": "UNKNOWN", "event_name": null, "event_date": null, "ticket_type": null, "quantity": null, "price_per_ticket": null, "max_price": null, "missing_fields": ["event_name", "event_date", "ticket_type", "quantity", "price_per_ticket", "max_price"], "confidence": 0.0}', 'UNKNOWN', 0.0, 'AI', 'v1.0')
+INFO: [cached since 25.34s ago] ('+316TESTSELLER', 'ja', '{"intent": "UNKNOWN", "event_name": null, "event_date": null, "ticket_type": null, "quantity": null, "price_per_ticket": null, "max_price": null, "missing_fields": ["event_name", "event_date", "ticket_type", "quantity", "price_per_ticket", "max_price"], "confidence": 0.0}', 'UNKNOWN', 0.0, 'AI', 'v1.0')
+2026-02-19 21:11:27,618 INFO sqlalchemy.engine.Engine INSERT INTO sell_offers (timestamp, first_name, last_name, phone, email, instagram, gender, birth_date, city, postcode, event_name, event_date, quantity, price_per_ticket, total_price, sale_type, ticket_source, section, "row", seat_numbers, proof_url, agreement_accepted, verification_status, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id, created_at, updated_at
+INFO: INSERT INTO sell_offers (timestamp, first_name, last_name, phone, email, instagram, gender, birth_date, city, postcode, event_name, event_date, quantity, price_per_ticket, total_price, sale_type, ticket_source, section, "row", seat_numbers, proof_url, agreement_accepted, verification_status, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id, created_at, updated_at
+2026-02-19 21:11:27,618 INFO sqlalchemy.engine.Engine [generated in 0.00038s] (None, 'WhatsApp Seller', None, '+316TESTSELLER', None, None, None, None, None, None, 'Tomorrowland (Weekend)', '2023-07-25', 1, 75.0, 75.0, None, None, None, None, None, None, 0, 'UNVERIFIED', 'AVAILABLE')
+INFO: [generated in 0.00038s] (None, 'WhatsApp Seller', None, '+316TESTSELLER', None, None, None, None, None, None, 'Tomorrowland (Weekend)', '2023-07-25', 1, 75.0, 75.0, None, None, None, None, None, None, 0, 'UNVERIFIED', 'AVAILABLE')
+2026-02-19 21:11:27,621 INFO sqlalchemy.engine.Engine SELECT sell_offers.id, sell_offers.timestamp, sell_offers.first_name, sell_offers.last_name, sell_offers.phone, sell_offers.email, sell_offers.instagram, sell_offers.gender, sell_offers.birth_date, sell_offers.city, sell_offers.postcode, sell_offers.event_name, sell_offers.event_date, sell_offers.quantity, sell_offers.price_per_ticket, sell_offers.total_price, sell_offers.sale_type, sell_offers.ticket_source, sell_offers.section, sell_offers."row", sell_offers.seat_numbers, sell_offers.proof_url, sell_offers.agreement_accepted, sell_offers.verification_status, sell_offers.status, sell_offers.created_at, sell_offers.updated_at 
+FROM sell_offers 
+WHERE sell_offers.id = ?
+INFO: SELECT sell_offers.id, sell_offers.timestamp, sell_offers.first_name, sell_offers.last_name, sell_offers.phone, sell_offers.email, sell_offers.instagram, sell_offers.gender, sell_offers.birth_date, sell_offers.city, sell_offers.postcode, sell_offers.event_name, sell_offers.event_date, sell_offers.quantity, sell_offers.price_per_ticket, sell_offers.total_price, sell_offers.sale_type, sell_offers.ticket_source, sell_offers.section, sell_offers."row", sell_offers.seat_numbers, sell_offers.proof_url, sell_offers.agreement_accepted, sell_offers.verification_status, sell_offers.status, sell_offers.created_at, sell_offers.updated_at 
+FROM sell_offers 
+WHERE sell_offers.id = ?
+2026-02-19 21:11:27,621 INFO sqlalchemy.engine.Engine [generated in 0.00019s] (17,)
+INFO: [generated in 0.00019s] (17,)
+2026-02-19 21:11:27,623 INFO sqlalchemy.engine.Engine SELECT chat_sessions.id, chat_sessions.phone, chat_sessions.current_intent, chat_sessions.current_step, chat_sessions.collected_data, chat_sessions.last_updated, chat_sessions.created_at 
+FROM chat_sessions 
+WHERE chat_sessions.phone = ?
+INFO: SELECT chat_sessions.id, chat_sessions.phone, chat_sessions.current_intent, chat_sessions.current_step, chat_sessions.collected_data, chat_sessions.last_updated, chat_sessions.created_at 
+FROM chat_sessions 
+WHERE chat_sessions.phone = ?
+2026-02-19 21:11:27,623 INFO sqlalchemy.engine.Engine [cached since 30.86s ago] ('+316TESTSELLER',)
+INFO: [cached since 30.86s ago] ('+316TESTSELLER',)
+2026-02-19 21:11:27,623 INFO sqlalchemy.engine.Engine UPDATE chat_sessions SET current_step=?, collected_data=?, last_updated=CURRENT_TIMESTAMP WHERE chat_sessions.id = ?
+INFO: UPDATE chat_sessions SET current_step=?, collected_data=?, last_updated=CURRENT_TIMESTAMP WHERE chat_sessions.id = ?
+2026-02-19 21:11:27,623 INFO sqlalchemy.engine.Engine [cached since 19.58s ago] ('IDLE', '{}', 31)
+INFO: [cached since 19.58s ago] ('IDLE', '{}', 31)
+2026-02-19 21:11:27,624 INFO sqlalchemy.engine.Engine SELECT chat_sessions.id, chat_sessions.phone, chat_sessions.current_intent, chat_sessions.current_step, chat_sessions.collected_data, chat_sessions.last_updated, chat_sessions.created_at 
+FROM chat_sessions 
+WHERE chat_sessions.id = ?
+INFO: SELECT chat_sessions.id, chat_sessions.phone, chat_sessions.current_intent, chat_sessions.current_step, chat_sessions.collected_data, chat_sessions.last_updated, chat_sessions.created_at 
+FROM chat_sessions 
+WHERE chat_sessions.id = ?
+2026-02-19 21:11:27,624 INFO sqlalchemy.engine.Engine [cached since 30.86s ago] (31,)
+INFO: [cached since 30.86s ago] (31,)
+INFO: Broadcast sent to +918087847607
+INFO: Broadcast complete: 1/1 messages sent
+/Users/prakashtupe/Ticketautomation/venv/lib/python3.9/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+INFO: Processing waitlist for new offer #17: Tomorrowland (Weekend)
+
+[MOCK WHATSAPP] To: +918087847607 | Body: 🎫 *Nieuw aanbod op FestiFlip!*
+
+🎟️ Evenement: *Tomorrowland*
+🔢 Aantal: 1 ticket(s)
+💰 Prijs: €75.00 per stuk
+
+Interesse? Stuur ons een bericht met:
+"Ik wil tickets kopen voor Tomorrowland"
+
+📲 Wees er snel bij, op = op!
+
+2026-02-19 21:11:27,922 INFO sqlalchemy.engine.Engine SELECT buy_requests.id, buy_requests.timestamp, buy_requests.first_name, buy_requests.last_name, buy_requests.phone, buy_requests.email, buy_requests.instagram, buy_requests.gender, buy_requests.birth_date, buy_requests.city, buy_requests.postcode, buy_requests.event_name, buy_requests.event_date, buy_requests.quantity, buy_requests.max_price_per_ticket, buy_requests.agreement_accepted, buy_requests.source, buy_requests.status, buy_requests.created_at, buy_requests.updated_at 
+FROM buy_requests 
+WHERE buy_requests.status = ? AND buy_requests.quantity <= ? ORDER BY buy_requests.created_at ASC
+INFO: SELECT buy_requests.id, buy_requests.timestamp, buy_requests.first_name, buy_requests.last_name, buy_requests.phone, buy_requests.email, buy_requests.instagram, buy_requests.gender, buy_requests.birth_date, buy_requests.city, buy_requests.postcode, buy_requests.event_name, buy_requests.event_date, buy_requests.quantity, buy_requests.max_price_per_ticket, buy_requests.agreement_accepted, buy_requests.source, buy_requests.status, buy_requests.created_at, buy_requests.updated_at 
+FROM buy_requests 
+WHERE buy_requests.status = ? AND buy_requests.quantity <= ? ORDER BY buy_requests.created_at ASC
+2026-02-19 21:11:27,922 INFO sqlalchemy.engine.Engine [generated in 0.00009s] ('WAITING', 1)
+INFO: [generated in 0.00009s] ('WAITING', 1)
+INFO: Found 1 potential waitlist matches.
+2026-02-19 21:11:27,923 INFO sqlalchemy.engine.Engine SELECT sell_offers.id, sell_offers.timestamp, sell_offers.first_name, sell_offers.last_name, sell_offers.phone, sell_offers.email, sell_offers.instagram, sell_offers.gender, sell_offers.birth_date, sell_offers.city, sell_offers.postcode, sell_offers.event_name, sell_offers.event_date, sell_offers.quantity, sell_offers.price_per_ticket, sell_offers.total_price, sell_offers.sale_type, sell_offers.ticket_source, sell_offers.section, sell_offers."row", sell_offers.seat_numbers, sell_offers.proof_url, sell_offers.agreement_accepted, sell_offers.verification_status, sell_offers.status, sell_offers.created_at, sell_offers.updated_at 
+FROM sell_offers 
+WHERE sell_offers.id = ?
+INFO: SELECT sell_offers.id, sell_offers.timestamp, sell_offers.first_name, sell_offers.last_name, sell_offers.phone, sell_offers.email, sell_offers.instagram, sell_offers.gender, sell_offers.birth_date, sell_offers.city, sell_offers.postcode, sell_offers.event_name, sell_offers.event_date, sell_offers.quantity, sell_offers.price_per_ticket, sell_offers.total_price, sell_offers.sale_type, sell_offers.ticket_source, sell_offers.section, sell_offers."row", sell_offers.seat_numbers, sell_offers.proof_url, sell_offers.agreement_accepted, sell_offers.verification_status, sell_offers.status, sell_offers.created_at, sell_offers.updated_at 
+FROM sell_offers 
+WHERE sell_offers.id = ?
+2026-02-19 21:11:27,923 INFO sqlalchemy.engine.Engine [generated in 0.00006s] (17,)
+INFO: [generated in 0.00006s] (17,)
+2026-02-19 21:11:27,923 INFO sqlalchemy.engine.Engine SELECT buy_requests.id, buy_requests.timestamp, buy_requests.first_name, buy_requests.last_name, buy_requests.phone, buy_requests.email, buy_requests.instagram, buy_requests.gender, buy_requests.birth_date, buy_requests.city, buy_requests.postcode, buy_requests.event_name, buy_requests.event_date, buy_requests.quantity, buy_requests.max_price_per_ticket, buy_requests.agreement_accepted, buy_requests.source, buy_requests.status, buy_requests.created_at, buy_requests.updated_at 
+FROM buy_requests 
+WHERE buy_requests.id = ?
+INFO: SELECT buy_requests.id, buy_requests.timestamp, buy_requests.first_name, buy_requests.last_name, buy_requests.phone, buy_requests.email, buy_requests.instagram, buy_requests.gender, buy_requests.birth_date, buy_requests.city, buy_requests.postcode, buy_requests.event_name, buy_requests.event_date, buy_requests.quantity, buy_requests.max_price_per_ticket, buy_requests.agreement_accepted, buy_requests.source, buy_requests.status, buy_requests.created_at, buy_requests.updated_at 
+FROM buy_requests 
+WHERE buy_requests.id = ?
+2026-02-19 21:11:27,924 INFO sqlalchemy.engine.Engine [generated in 0.00005s] (33,)
+INFO: [generated in 0.00005s] (33,)
+2026-02-19 21:11:27,924 INFO sqlalchemy.engine.Engine UPDATE sell_offers SET status=?, updated_at=CURRENT_TIMESTAMP WHERE sell_offers.id = ?
+INFO: UPDATE sell_offers SET status=?, updated_at=CURRENT_TIMESTAMP WHERE sell_offers.id = ?
+2026-02-19 21:11:27,924 INFO sqlalchemy.engine.Engine [generated in 0.00006s] ('RESERVED', 17)
+INFO: [generated in 0.00006s] ('RESERVED', 17)
+2026-02-19 21:11:27,925 INFO sqlalchemy.engine.Engine SELECT sell_offers.id, sell_offers.timestamp, sell_offers.first_name, sell_offers.last_name, sell_offers.phone, sell_offers.email, sell_offers.instagram, sell_offers.gender, sell_offers.birth_date, sell_offers.city, sell_offers.postcode, sell_offers.event_name, sell_offers.event_date, sell_offers.quantity, sell_offers.price_per_ticket, sell_offers.total_price, sell_offers.sale_type, sell_offers.ticket_source, sell_offers.section, sell_offers."row", sell_offers.seat_numbers, sell_offers.proof_url, sell_offers.agreement_accepted, sell_offers.verification_status, sell_offers.status, sell_offers.created_at, sell_offers.updated_at 
+FROM sell_offers 
+WHERE sell_offers.id = ?
+INFO: SELECT sell_offers.id, sell_offers.timestamp, sell_offers.first_name, sell_offers.last_name, sell_offers.phone, sell_offers.email, sell_offers.instagram, sell_offers.gender, sell_offers.birth_date, sell_offers.city, sell_offers.postcode, sell_offers.event_name, sell_offers.event_date, sell_offers.quantity, sell_offers.price_per_ticket, sell_offers.total_price, sell_offers.sale_type, sell_offers.ticket_source, sell_offers.section, sell_offers."row", sell_offers.seat_numbers, sell_offers.proof_url, sell_offers.agreement_accepted, sell_offers.verification_status, sell_offers.status, sell_offers.created_at, sell_offers.updated_at 
+FROM sell_offers 
+WHERE sell_offers.id = ?
+2026-02-19 21:11:27,925 INFO sqlalchemy.engine.Engine [cached since 0.001831s ago] (17,)
+INFO: [cached since 0.001831s ago] (17,)
+2026-02-19 21:11:27,925 INFO sqlalchemy.engine.Engine UPDATE buy_requests SET status=?, updated_at=CURRENT_TIMESTAMP WHERE buy_requests.id = ?
+INFO: UPDATE buy_requests SET status=?, updated_at=CURRENT_TIMESTAMP WHERE buy_requests.id = ?
+2026-02-19 21:11:27,925 INFO sqlalchemy.engine.Engine [generated in 0.00005s] ('MATCHED', 33)
+INFO: [generated in 0.00005s] ('MATCHED', 33)
+2026-02-19 21:11:27,925 INFO sqlalchemy.engine.Engine SELECT buy_requests.id, buy_requests.timestamp, buy_requests.first_name, buy_requests.last_name, buy_requests.phone, buy_requests.email, buy_requests.instagram, buy_requests.gender, buy_requests.birth_date, buy_requests.city, buy_requests.postcode, buy_requests.event_name, buy_requests.event_date, buy_requests.quantity, buy_requests.max_price_per_ticket, buy_requests.agreement_accepted, buy_requests.source, buy_requests.status, buy_requests.created_at, buy_requests.updated_at 
+FROM buy_requests 
+WHERE buy_requests.id = ?
+INFO: SELECT buy_requests.id, buy_requests.timestamp, buy_requests.first_name, buy_requests.last_name, buy_requests.phone, buy_requests.email, buy_requests.instagram, buy_requests.gender, buy_requests.birth_date, buy_requests.city, buy_requests.postcode, buy_requests.event_name, buy_requests.event_date, buy_requests.quantity, buy_requests.max_price_per_ticket, buy_requests.agreement_accepted, buy_requests.source, buy_requests.status, buy_requests.created_at, buy_requests.updated_at 
+FROM buy_requests 
+WHERE buy_requests.id = ?
+2026-02-19 21:11:27,925 INFO sqlalchemy.engine.Engine [cached since 0.001915s ago] (33,)
+INFO: [cached since 0.001915s ago] (33,)
+INFO: message='Request to Stripe api' method=post url=https://api.stripe.com/v1/checkout/sessions
+INFO: message='Stripe API response' path=https://api.stripe.com/v1/checkout/sessions response_code=200
+INFO: Stripe session created: cs_test_a1HAgRXfaxwAYeACnCrFITq2nvqwMd1NvXegw5AmC87P0nI6uELHU5cXQV for reservation 0
+2026-02-19 21:11:29,040 INFO sqlalchemy.engine.Engine INSERT INTO reservations (buy_request_id, sell_offer_id, quantity, deposit_amount, remaining_amount, minimum_applied, stripe_session_id, stripe_checkout_url, status, expires_at, paid_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id, created_at, updated_at
+INFO: INSERT INTO reservations (buy_request_id, sell_offer_id, quantity, deposit_amount, remaining_amount, minimum_applied, stripe_session_id, stripe_checkout_url, status, expires_at, paid_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id, created_at, updated_at
+2026-02-19 21:11:29,041 INFO sqlalchemy.engine.Engine [generated in 0.00044s] (33, 17, 1, 5.63, 69.37, 0, 'cs_test_a1HAgRXfaxwAYeACnCrFITq2nvqwMd1NvXegw5AmC87P0nI6uELHU5cXQV', 'https://checkout.stripe.com/c/pay/cs_test_a1HAgRXfaxwAYeACnCrFITq2nvqwMd1NvXegw5AmC87P0nI6uELHU5cXQV#fidnandhYHdWcXxpYCc%2FJ2FgY2RwaXEnKSdkdWxOYHwnPy ... (135 characters truncated) ... GZqVz1ucycpJ2N3amhWYHdzYHcnP3F3cGApJ2dkZm5id2pwa2FGamlqdyc%2FJyZjY2NjY2MnKSdpZHxqcHFRfHVgJz8ndmxrYmlgWmxxYGgnKSdga2RnaWBVaWRmYG1qaWFgd3YnP3F3cGB4JSUl', 'PENDING', '2026-02-19 16:41:29.037765', None)
+INFO: [generated in 0.00044s] (33, 17, 1, 5.63, 69.37, 0, 'cs_test_a1HAgRXfaxwAYeACnCrFITq2nvqwMd1NvXegw5AmC87P0nI6uELHU5cXQV', 'https://checkout.stripe.com/c/pay/cs_test_a1HAgRXfaxwAYeACnCrFITq2nvqwMd1NvXegw5AmC87P0nI6uELHU5cXQV#fidnandhYHdWcXxpYCc%2FJ2FgY2RwaXEnKSdkdWxOYHwnPy ... (135 characters truncated) ... GZqVz1ucycpJ2N3amhWYHdzYHcnP3F3cGApJ2dkZm5id2pwa2FGamlqdyc%2FJyZjY2NjY2MnKSdpZHxqcHFRfHVgJz8ndmxrYmlgWmxxYGgnKSdga2RnaWBVaWRmYG1qaWFgd3YnP3F3cGB4JSUl', 'PENDING', '2026-02-19 16:41:29.037765', None)
+2026-02-19 21:11:29,044 INFO sqlalchemy.engine.Engine SELECT reservations.id, reservations.buy_request_id, reservations.sell_offer_id, reservations.quantity, reservations.deposit_amount, reservations.remaining_amount, reservations.minimum_applied, reservations.stripe_session_id, reservations.stripe_checkout_url, reservations.status, reservations.expires_at, reservations.paid_at, reservations.created_at, reservations.updated_at 
+FROM reservations 
+WHERE reservations.id = ?
+INFO: SELECT reservations.id, reservations.buy_request_id, reservations.sell_offer_id, reservations.quantity, reservations.deposit_amount, reservations.remaining_amount, reservations.minimum_applied, reservations.stripe_session_id, reservations.stripe_checkout_url, reservations.status, reservations.expires_at, reservations.paid_at, reservations.created_at, reservations.updated_at 
+FROM reservations 
+WHERE reservations.id = ?
+2026-02-19 21:11:29,044 INFO sqlalchemy.engine.Engine [generated in 0.00020s] (16,)
+INFO: [generated in 0.00020s] (16,)
+2026-02-19 21:11:29,047 INFO sqlalchemy.engine.Engine INSERT INTO payments (reservation_id, deposit_amount, minimum_applied, stripe_session_id, stripe_payment_intent_id, webhook_event_id, status) VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id, created_at, updated_at
+INFO: INSERT INTO payments (reservation_id, deposit_amount, minimum_applied, stripe_session_id, stripe_payment_intent_id, webhook_event_id, status) VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id, created_at, updated_at
+2026-02-19 21:11:29,047 INFO sqlalchemy.engine.Engine [generated in 0.00019s] (16, 5.63, 0, 'cs_test_a1HAgRXfaxwAYeACnCrFITq2nvqwMd1NvXegw5AmC87P0nI6uELHU5cXQV', None, None, 'PENDING')
+INFO: [generated in 0.00019s] (16, 5.63, 0, 'cs_test_a1HAgRXfaxwAYeACnCrFITq2nvqwMd1NvXegw5AmC87P0nI6uELHU5cXQV', None, None, 'PENDING')
+2026-02-19 21:11:29,049 INFO sqlalchemy.engine.Engine SELECT payments.id, payments.reservation_id, payments.deposit_amount, payments.minimum_applied, payments.stripe_session_id, payments.stripe_payment_intent_id, payments.webhook_event_id, payments.status, payments.created_at, payments.updated_at 
+FROM payments 
+WHERE payments.id = ?
+INFO: SELECT payments.id, payments.reservation_id, payments.deposit_amount, payments.minimum_applied, payments.stripe_session_id, payments.stripe_payment_intent_id, payments.webhook_event_id, payments.status, payments.created_at, payments.updated_at 
+FROM payments 
+WHERE payments.id = ?
+2026-02-19 21:11:29,049 INFO sqlalchemy.engine.Engine [generated in 0.00016s] (15,)
+INFO: [generated in 0.00016s] (15,)
+2026-02-19 21:11:29,050 INFO sqlalchemy.engine.Engine COMMIT
+INFO: COMMIT
+INFO: Step 3: Verifying Waitlist Notification
+INFO: Cleaning up previous test data...
+
+[MOCK WHATSAPP] To: +316TESTBUYER | Body: 🎉 Goed nieuws! Er zijn tickets beschikbaar gekomen voor Tomorrowland (Weekend)!
+
+Omdat je hier eerder naar zocht, hebben we ze voor je gereserveerd.
+
+💳 Betaal de aanbetaling van €5.63 om je tickets definitief te claimen:
+https://checkout.stripe.com/c/pay/cs_test_a1HAgRXfaxwAYeACnCrFITq2nvqwMd1NvXegw5AmC87P0nI6uELHU5cXQV#fidnandhYHdWcXxpYCc%2FJ2FgY2RwaXEnKSdkdWxOYHwnPyd1blpxYHZxWjA0VmY2UEo3U1xnQ0dwTWE1VFEzc1JiPEhIczRAVlxQQ0dddWE8MzZLNWpPVWlBNk9mYTFOU21jVENpTXNRNTVHN3NUQzJ8Y3Fra0tWQlc8cHFgSjBNQTZhNTV9QGZqVz1ucycpJ2N3amhWYHdzYHcnP3F3cGApJ2dkZm5id2pwa2FGamlqdyc%2FJyZjY2NjY2MnKSdpZHxqcHFRfHVgJz8ndmxrYmlgWmxxYGgnKSdga2RnaWBVaWRmYG1qaWFgd3YnP3F3cGB4JSUl
+
+⏰ Let op: deze reservering vervalt over 60 minuten als je niet betaalt.
+
+BOT: ✅ Je aanbod is opgeslagen!
+
+De stappen zijn als volgt voor jou als verkoper:
+
+1. De koper betaalt eerst de aanbetaling (7,5% met een minimum van €5 per ticket).
+2. Zodra deze is betaald, ontvangt de koper jouw nummer en stuurt diegene jou een appje.
+3. Daarna kan jij de koper een betaalverzoek sturen van jouw deel.
+4. Leg uit of je het ticket direct kan versturen of op naam zet.
+5. Laat de koper altijd eerst betalen voordat je het ticket overdraagt.
+
+✅ SUCCESS: Buyer received notification!
+   Message: 🎉 Goed nieuws! Er zijn tickets beschikbaar gekomen voor Tomorrowland (Weekend)!
+
+Omdat je hier eerder naar zocht, hebben we ze voor je gereserveerd.
+
+💳 Betaal de aanbetaling van €5.63 om je tickets definitief te claimen:
+https://checkout.stripe.com/c/pay/cs_test_a1HAgRXfaxwAYeACnCrFITq2nvqwMd1NvXegw5AmC87P0nI6uELHU5cXQV#fidnandhYHdWcXxpYCc%2FJ2FgY2RwaXEnKSdkdWxOYHwnPyd1blpxYHZxWjA0VmY2UEo3U1xnQ0dwTWE1VFEzc1JiPEhIczRAVlxQQ0dddWE8MzZLNWpPVWlBNk9mYTFOU21jVENpTXNRNTVHN3NUQzJ8Y3Fra0tWQlc8cHFgSjBNQTZhNTV9QGZqVz1ucycpJ2N3amhWYHdzYHcnP3F3cGApJ2dkZm5id2pwa2FGamlqdyc%2FJyZjY2NjY2MnKSdpZHxqcHFRfHVgJz8ndmxrYmlgWmxxYGgnKSdga2RnaWBVaWRmYG1qaWFgd3YnP3F3cGB4JSUl
+
+⏰ Let op: deze reservering vervalt over 60 minuten als je niet betaalt.
+   (Contains Payment Link)
+2026-02-19 21:11:29,555 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+INFO: BEGIN (implicit)
+2026-02-19 21:11:29,556 INFO sqlalchemy.engine.Engine DELETE FROM chat_sessions WHERE phone IN (?, ?)
+INFO: DELETE FROM chat_sessions WHERE phone IN (?, ?)
+2026-02-19 21:11:29,556 INFO sqlalchemy.engine.Engine [cached since 32.8s ago] ('+316TESTBUYER', '+316TESTSELLER')
+INFO: [cached since 32.8s ago] ('+316TESTBUYER', '+316TESTSELLER')
+2026-02-19 21:11:29,557 INFO sqlalchemy.engine.Engine DELETE FROM buy_requests WHERE phone = ?
+INFO: DELETE FROM buy_requests WHERE phone = ?
+2026-02-19 21:11:29,557 INFO sqlalchemy.engine.Engine [cached since 32.8s ago] ('+316TESTBUYER',)
+INFO: [cached since 32.8s ago] ('+316TESTBUYER',)
+2026-02-19 21:11:29,558 INFO sqlalchemy.engine.Engine DELETE FROM sell_offers WHERE phone = ?
+INFO: DELETE FROM sell_offers WHERE phone = ?
+2026-02-19 21:11:29,558 INFO sqlalchemy.engine.Engine [cached since 32.8s ago] ('+316TESTSELLER',)
+INFO: [cached since 32.8s ago] ('+316TESTSELLER',)
+2026-02-19 21:11:29,559 INFO sqlalchemy.engine.Engine COMMIT
+INFO: COMMIT

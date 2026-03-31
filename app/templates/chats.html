@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💬</text></svg>">
+  <link rel="stylesheet" href="/static/whatsapp-clone.css">
+  <title>FestiFlip Chats</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            WABrightGreen: 'hsl(142, 70%, 49%)',
+            WATeal: 'hsl(173, 77%, 31%)',
+            WADarkTeal: 'hsl(203, 25%, 16%)',
+            WADarkGreen: 'hsl(203, 32%, 10%)',
+            WADarkGreen2: 'hsl(167, 100%, 33%)',
+            WAChatBGLight: 'hsl(37, 29%, 91%)',
+            WAChatBGLDark: 'hsl(206, 39%, 7%)',
+            WALightYellow: 'hsl(40, 100%, 90%)'
+          },
+          animation: {
+            'dropdown': 'dropdown 0.5s ease-out',
+          },
+          keyframes: {
+            dropdown: {
+              '0%': { top: '-280px' },
+              '100%': { top: '0px' }
+            }
+          }
+        }
+      }
+    }
+    
+    // Auto dark mode based on system preference
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      document.documentElement.classList.add('dark');
+    }
+  </script>
+</head>
+<body class="font-sans w-full bg-white dark:bg-WADarkGreen min-h-screen m-0 p-0 overflow-hidden">
+  <div class="md:flex md:flex-row h-screen">
+    
+    <!-- LEFT COLUMN: Contact List -->
+    <!-- On mobile, hide list if a chat is selected -->
+    <div id="column-1" class="relative dark:bg-WADarkGreen w-full md:w-[45%] xl:w-2/5 h-screen overflow-y-auto flex flex-col {% if selected_phone %}hidden md:flex{% else %}flex{% endif %}">
+      
+      <!-- top nav -->
+      <div class="relative flex flex-row items-center pt-4 pb-4 px-4 w-full sticky top-0 md:top-0 z-[5] bg-WATeal dark:bg-WADarkTeal text-white dark:text-gray-400 shadow-md">
+        <!-- Back to Admin Dashboard -->
+        <a href="/admin/" class="mr-3 text-white hover:text-gray-200">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+                <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
+            </svg>
+        </a>
+        <div class="justify-self-start text-xl font-bold">FestiFlip Chats</div>
+        <div class="flex gap-4 ml-auto">
+          <svg viewBox="0 0 24 24" class="w-6 h-6 fill-current cursor-pointer" id="search-btn"><path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+        </div>
+      </div>
+
+      <!-- search input (hidden by default, toggled via search-btn) -->
+      <div id="search-container" class="hidden px-4 py-2 bg-gray-100 dark:bg-WADarkGreen border-b dark:border-gray-800">
+         <div class="flex items-center bg-white dark:bg-[#202c33] rounded-lg px-3 py-1.5">
+            <svg viewBox="0 0 24 24" class="w-5 h-5 text-gray-400"><path fill="currentColor" d="M15.009 13.805h-.636l-.22-.219a5.184 5.184 0 0 0 1.256-3.386 5.207 5.207 0 1 0-5.207 5.208 5.183 5.183 0 0 0 3.385-1.255l.221.22v.635l4.004 3.999 1.194-1.195-3.997-4.007zm-4.6-1.604a3.193 3.193 0 1 1 0-6.386 3.193 3.193 0 0 1 0 6.386z"/></svg>
+            <input type="text" id="searchInput" placeholder="Search chats" class="w-full bg-transparent border-none outline-none ml-3 text-sm text-gray-800 dark:text-gray-200" oninput="filterContacts()">
+         </div>
+      </div>
+
+      <!-- Contacts List -->
+      <div class="bg-white dark:bg-WADarkGreen flex-1" id="contactList">
+        {% for contact in contacts %}
+        <a href="/admin/chats?phone={{ contact.phone | urlencode }}" class="flex items-center px-3 py-3 hover:bg-gray-100 dark:hover:bg-[#202c33] cursor-pointer {% if selected_phone == contact.phone %}bg-gray-200 dark:bg-[#2a3942]{% endif %} transition">
+            <div class="mr-3">
+                <!-- Default Avatar -->
+                <div class="w-12 h-12 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center overflow-hidden">
+                    <svg viewBox="0 0 24 24" class="w-8 h-8 text-white"><path fill="currentColor" d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                </div>
+            </div>
+            <div class="flex flex-col flex-1 min-w-0 border-b border-gray-100 dark:border-gray-800 pb-2 pt-1">
+                <div class="flex justify-between items-center mb-1">
+                    <div class="dark:text-white text-[15px] font-medium text-black truncate">{{ contact.phone }}</div>
+                    <div class="text-xs text-gray-500 dark:text-gray-400">{{ contact.last_time }}</div>
+                </div>
+                <div class="flex items-center text-sm text-gray-500 dark:text-gray-400">
+                    <span class="truncate">{{ contact.last_message }}</span>
+                </div>
+            </div>
+        </a>
+        {% endfor %}
+        {% if not contacts %}
+        <div class="p-8 text-center text-gray-500 dark:text-gray-400">No chats yet</div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- RIGHT COLUMN: Chat Area -->
+    <div id="column-2" class="w-full md:w-[55%] xl:w-3/5 h-screen flex flex-col relative {% if not selected_phone %}hidden md:flex{% endif %}">
+      
+      {% if selected_phone %}
+      <!-- chat background pattern -->
+      <div class="absolute inset-0 z-0 opacity-40 dark:opacity-5 pattern-bg" style="background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); background-repeat: repeat;"></div>
+      <div class="absolute inset-0 bg-[#efeae2] dark:bg-[#0b141a] z-[-1]"></div>
+
+      <!-- chat header -->
+      <div class="flex items-center justify-between px-4 py-2 bg-[#f0f2f5] dark:bg-[#202c33] z-10 sticky top-0 shadow-sm min-h-[59px]">
+        <div class="flex items-center flex-1 min-w-0">
+            <!-- Mobile back button to list -->
+            <a href="/admin/chats" class="mr-2 md:hidden text-gray-600 dark:text-gray-300">
+                <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+            </a>
+            
+            <div class="w-10 h-10 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center mr-3 flex-shrink-0">
+                <svg viewBox="0 0 24 24" class="w-6 h-6 text-white"><path fill="currentColor" d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+            </div>
+            <div class="flex flex-col min-w-0 shadow-sm shadow-black/5 rounded px-2 bg-white/50 dark:bg-black/20">
+                <div class="font-medium text-[16px] text-black dark:text-gray-100 truncate">{{ selected_phone }}</div>
+                <!-- Mini intent badge if exists -->
+                <div class="text-xs text-green-600 dark:text-green-400 truncate">Active session</div>
+            </div>
+        </div>
+        
+        <div class="flex items-center gap-4 text-gray-500 dark:text-gray-300">
+            <!-- Reset Session Button -->
+            <button onclick="resetSession('{{ selected_phone }}')" class="flex items-center gap-1 text-xs font-semibold bg-white dark:bg-[#2a3942] border border-gray-300 dark:border-gray-600 px-3 py-1.5 rounded-md hover:bg-gray-50 dark:hover:bg-[#374c55] transition shadow-sm" title="Reset this conversation">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46A7.93 7.93 0 0020 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74A7.93 7.93 0 004 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/></svg>
+                <span class="hidden sm:inline">Reset</span>
+            </button>
+        </div>
+      </div>
+
+      <!-- chat messages -->
+      <div class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-10 z-10 flex flex-col" id="messagesArea">
+        {% set prev_date = namespace(val='') %}
+        {% for msg in messages %}
+            {% set msg_date = msg.created_at.strftime('%d %B %Y') %}
+            {% if msg_date != prev_date.val %}
+                <div class="flex justify-center mb-4 mt-2">
+                    <span class="bg-white/90 dark:bg-[#182229]/90 text-gray-600 dark:text-gray-300 text-xs px-3 py-1.5 rounded-lg shadow-sm border border-black/5 dark:border-none uppercase tracking-wide">
+                        {{ msg_date }}
+                    </span>
+                </div>
+                {% set prev_date.val = msg_date %}
+            {% endif %}
+
+            <div class="flex mb-2 {{ 'justify-start' if msg.direction.value == 'INBOUND' else 'justify-end' }}">
+                <div class="relative max-w-[85%] sm:max-w-[70%] px-2 py-1.5 rounded-lg shadow-sm {{ 'bg-white dark:bg-[#202c33] rounded-tl-none' if msg.direction.value == 'INBOUND' else 'bg-[#d9fdd3] dark:bg-[#005c4b] rounded-tr-none' }}">
+                    
+                    <!-- SVG tail for bubble -->
+                    {% if msg.direction.value == 'INBOUND' %}
+                        <svg viewBox="0 0 8 13" class="absolute top-0 -left-[8px] w-[8px] h-[13px] text-white dark:text-[#202c33]"><path fill="currentColor" d="M5.188 1H0v11.193l6.467-8.625C7.526 2.156 6.958 1 5.188 1z"/></svg>
+                    {% else %}
+                        <svg viewBox="0 0 8 13" class="absolute top-0 -right-[8px] w-[8px] h-[13px] text-[#d9fdd3] dark:text-[#005c4b]"><path fill="currentColor" d="M2.812 1H8v11.193L1.533 3.568C.474 2.156 1.042 1 2.812 1z"/></svg>
+                    {% endif %}
+
+                    <div class="text-[14px] leading-relaxed text-[#111b21] dark:text-[#e9edef] whitespace-pre-wrap word-break">{{ msg.body | replace('\n', '<br>') | safe }}<span class="inline-block w-[60px] h-[1px]"></span></div>
+                    
+                    <div class="absolute bottom-1 right-2 flex items-center justify-end text-[10px] text-gray-500 dark:text-gray-400 gap-1 mt-1 leading-none">
+                        <span>{{ msg.created_at.strftime('%I:%M %p') }}</span>
+                        {% if msg.direction.value != 'INBOUND' %}
+                        <!-- Double tick -->
+                        <svg viewBox="0 0 16 15" width="16" height="15" class="text-blue-500 fill-current"><path d="M15.01 3.316l-.478-.372a.365.365 0 0 0-.51.063L8.666 9.879a.32.32 0 0 1-.484.033l-.358-.325a.319.319 0 0 0-.484.032l-.378.483a.418.418 0 0 0 .036.541l1.32 1.266c.143.14.361.125.484-.033l6.272-8.048a.366.366 0 0 0-.064-.512zm-4.1 0l-.478-.372a.365.365 0 0 0-.51.063L4.566 9.879a.32.32 0 0 1-.484.033L1.891 7.769a.366.366 0 0 0-.515.006l-.423.433a.364.364 0 0 0 .006.514l3.258 3.185c.143.14.361.125.484-.033l6.272-8.048a.365.365 0 0 0-.063-.51z"/></svg>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+      </div>
+
+      <!-- dummy chat input footer (purely aesthetic for admin) -->
+      <div class="flex items-end px-4 py-2 bg-[#f0f2f5] dark:bg-[#202c33] z-10 sticky bottom-0 min-h-[62px] gap-2">
+        <div class="p-2 text-gray-500 cursor-not-allowed">
+            <svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor"><path d="M9.153 11.603c.795 0 1.439-.879 1.439-1.962s-.644-1.962-1.439-1.962-1.439.879-1.439 1.962.644 1.962 1.439 1.962zm-3.204 1.362c-.026-.307-.131 5.218 6.063 5.551 6.066-.25 6.066-5.551 6.066-5.551-6.078 1.416-12.129 0-12.129 0zm11.363-1.108c.795 0 1.439-.879 1.439-1.962s-.644-1.962-1.439-1.962-1.439.879-1.439 1.962.644 1.962 1.439 1.962z"/></svg>
+        </div>
+        <div class="flex-1 bg-white dark:bg-[#2a3942] rounded-lg border border-transparent flex items-center px-3 py-2 mb-1.5 shadow-sm">
+            <input type="text" placeholder="Type a message (Admin view only)" class="w-full bg-transparent border-none outline-none text-[15px] dark:text-gray-200 text-gray-500 cursor-not-allowed" disabled>
+        </div>
+        <div class="p-2 text-gray-500 cursor-not-allowed mb-0.5">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M11.999 14.942c2.001 0 3.531-1.53 3.531-3.531V4.35c0-2.001-1.53-3.531-3.531-3.531S8.469 2.349 8.469 4.35v7.061c0 2.001 1.53 3.531 3.53 3.531zm6.238-3.53c0 3.531-2.942 6.002-6.237 6.002s-6.237-2.471-6.237-6.002H3.761c0 4.001 3.178 7.297 7.061 7.885v3.884h2.354v-3.884c3.884-.588 7.061-3.884 7.061-7.885h-2.002z"/></svg>
+        </div>
+      </div>
+      
+      {% else %}
+      <!-- Empty state when no chat selected -->
+      <div class="flex-1 bg-[#f0f2f5] dark:bg-[#222e35] flex items-center justify-center border-l dark:border-[#2f3e46]">
+        <div class="text-center max-w-md px-6">
+            <h1 class="text-[#41525d] dark:text-[#e9edef] text-[32px] font-light mt-8">FestiFlip WhatsApp Admin</h1>
+            <p class="text-[#667781] dark:text-[#8696a0] text-[14px] mt-4 leading-relaxed">Select a chat from the left menu to view the conversation history between the bot and the user.</p>
+        </div>
+      </div>
+      {% endif %}
+
+    </div>
+  </div>
+
+  <script>
+    // Search toggle
+    const searchBtn = document.getElementById('search-btn');
+    const searchContainer = document.getElementById('search-container');
+    if (searchBtn && searchContainer) {
+        searchBtn.addEventListener('click', () => {
+            searchContainer.classList.toggle('hidden');
+            if(!searchContainer.classList.contains('hidden')) {
+                document.getElementById('searchInput').focus();
+            }
+        });
+    }
+
+    // Filter contacts
+    function filterContacts() {
+        const input = document.getElementById('searchInput').value.toLowerCase();
+        const contacts = document.querySelectorAll('.contact-item, a[href^="/admin/chats?phone="]');
+        contacts.forEach(contact => {
+            const phone = contact.querySelector('.truncate, .c-name').innerText.toLowerCase();
+            if (phone.includes(input)) {
+                contact.style.display = 'flex';
+            } else {
+                contact.style.display = 'none';
+            }
+        });
+    }
+
+    // Scroll to bottom
+    const messagesArea = document.getElementById("messagesArea");
+    if (messagesArea) {
+        messagesArea.scrollTop = messagesArea.scrollHeight;
+    }
+
+    // Reset session
+    async function resetSession(phone) {
+        if (!confirm(`Are you sure you want to reset the session for ${phone}?`)) return;
+        try {
+            const response = await fetch('/admin/chats/reset', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ phone: phone })
+            });
+            if (response.ok) {
+                alert("Session reset successfully!");
+                location.reload();
+            } else {
+                alert("Failed to reset session.");
+            }
+        } catch (error) {
+            console.error(error);
+            alert("Error resetting session.");
+        }
+    }
+  </script>
+</body>
+</html>

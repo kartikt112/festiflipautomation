@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% set active = "sellers" %}
+{% block title %}FestiFlip Admin - Verify Sellers{% endblock %}
+{% block page_title %}Seller Verification{% endblock %}
+
+{% block content %}
+<div class="table-container">
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Seller</th>
+                <th>Phone</th>
+                <th>Event</th>
+                <th>Qty</th>
+                <th>Price</th>
+                <th>Proof</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for seller in sellers %}
+            <tr>
+                <td>{{ seller.id }}</td>
+                <td>{{ seller.first_name }} {{ seller.last_name or '' }}</td>
+                <td>{{ seller.phone }}</td>
+                <td>{{ seller.event_name }}</td>
+                <td>{{ seller.quantity }}</td>
+                <td>€{{ "%.2f"|format(seller.price_per_ticket) }}</td>
+                <td>
+                    {% if seller.proof_url %}
+                    <a href="{{ seller.proof_url }}" target="_blank" class="btn btn-sm">View Proof</a>
+                    {% else %}
+                    <span class="text-muted">No proof</span>
+                    {% endif %}
+                </td>
+                <td><span class="badge badge-unverified">{{ seller.verification_status.value }}</span></td>
+                <td>
+                    <div class="action-group">
+                        <form method="post" action="/admin/sellers/{{ seller.id }}/verify">
+                            <input type="hidden" name="status" value="VERIFIED">
+                            <button type="submit" class="btn btn-success btn-sm">✅ Verify</button>
+                        </form>
+                        <form method="post" action="/admin/sellers/{{ seller.id }}/verify">
+                            <input type="hidden" name="status" value="TRUSTED">
+                            <button type="submit" class="btn btn-primary btn-sm">⭐ Trust</button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="9" class="empty">No sellers pending verification</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

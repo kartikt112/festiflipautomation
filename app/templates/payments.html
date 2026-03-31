@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% set active = "payments" %}
+{% block title %}FestiFlip Admin - Payments{% endblock %}
+{% block page_title %}Payments{% endblock %}
+
+{% block content %}
+<div class="table-container">
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Reservation</th>
+                <th>Deposit</th>
+                <th>Min Applied</th>
+                <th>Stripe Session</th>
+                <th>Payment Intent</th>
+                <th>Status</th>
+                <th>Created</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for payment in payments %}
+            <tr>
+                <td>{{ payment.id }}</td>
+                <td>#{{ payment.reservation_id }}</td>
+                <td>€{{ "%.2f"|format(payment.deposit_amount) }}</td>
+                <td>{{ '✅' if payment.minimum_applied else '❌' }}</td>
+                <td class="truncate">{{ payment.stripe_session_id or '-' }}</td>
+                <td class="truncate">{{ payment.stripe_payment_intent_id or '-' }}</td>
+                <td><span class="badge badge-{{ payment.status.value|lower }}">{{ payment.status.value }}</span></td>
+                <td>{{ payment.created_at.strftime('%Y-%m-%d %H:%M') if payment.created_at else '-' }}</td>
+                <td>
+                    {% if payment.status.value == 'COMPLETED' and payment.stripe_payment_intent_id %}
+                    <form method="post" action="/admin/payments/{{ payment.id }}/refund"
+                        onsubmit="return confirm('Refund this payment?')">
+                        <button type="submit" class="btn btn-danger btn-sm">Refund</button>
+                    </form>
+                    {% endif %}
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="9" class="empty">No payments found</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

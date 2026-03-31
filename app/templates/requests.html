@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% set active = "requests" %}
+{% block title %}FestiFlip Admin - Buy Requests{% endblock %}
+{% block page_title %}Buy Requests{% endblock %}
+
+{% block content %}
+<div class="table-container">
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Event</th>
+                <th>Date</th>
+                <th>Qty</th>
+                <th>Max Price</th>
+                <th>Buyer</th>
+                <th>Phone</th>
+                <th>Source</th>
+                <th>Status</th>
+                <th>Created</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for req in buy_requests %}
+            <tr>
+                <td>{{ req.id }}</td>
+                <td>{{ req.event_name }}</td>
+                <td>{{ req.event_date or '-' }}</td>
+                <td>{{ req.quantity }}</td>
+                <td>{{ "€%.2f"|format(req.max_price_per_ticket) if req.max_price_per_ticket else '-' }}</td>
+                <td>{{ req.first_name }} {{ req.last_name or '' }}</td>
+                <td>{{ req.phone }}</td>
+                <td><span class="badge">{{ req.source.value }}</span></td>
+                <td><span class="badge badge-{{ req.status.value|lower }}">{{ req.status.value }}</span></td>
+                <td>{{ req.created_at.strftime('%Y-%m-%d %H:%M') if req.created_at else '-' }}</td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="10" class="empty">No buy requests found</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

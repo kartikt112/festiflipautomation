@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% set active = "reservations" %}
+{% block title %}FestiFlip Admin - Reservations{% endblock %}
+{% block page_title %}Reservations{% endblock %}
+
+{% block content %}
+<div class="table-container">
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Buy Req</th>
+                <th>Sell Offer</th>
+                <th>Qty</th>
+                <th>Deposit</th>
+                <th>Remaining</th>
+                <th>Min Applied</th>
+                <th>Status</th>
+                <th>Expires</th>
+                <th>Paid At</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for res in reservations %}
+            <tr>
+                <td>{{ res.id }}</td>
+                <td>#{{ res.buy_request_id }}</td>
+                <td>#{{ res.sell_offer_id }}</td>
+                <td>{{ res.quantity }}</td>
+                <td>€{{ "%.2f"|format(res.deposit_amount) }}</td>
+                <td>€{{ "%.2f"|format(res.remaining_amount) }}</td>
+                <td>{{ '✅' if res.minimum_applied else '❌' }}</td>
+                <td><span class="badge badge-{{ res.status.value|lower }}">{{ res.status.value }}</span></td>
+                <td>{{ res.expires_at.strftime('%Y-%m-%d %H:%M') if res.expires_at else '-' }}</td>
+                <td>{{ res.paid_at.strftime('%Y-%m-%d %H:%M') if res.paid_at else '-' }}</td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="10" class="empty">No reservations found</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% set active = "dashboard" %}
+{% block title %}FestiFlip Admin - Dashboard{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon">🎫</div>
+        <div class="stat-info">
+            <h3>{{ offers_count }}</h3>
+            <p>Total Listings</p>
+        </div>
+    </div>
+    <div class="stat-card stat-available">
+        <div class="stat-icon">✅</div>
+        <div class="stat-info">
+            <h3>{{ available_count }}</h3>
+            <p>Available</p>
+        </div>
+    </div>
+    <div class="stat-card stat-requests">
+        <div class="stat-icon">🛒</div>
+        <div class="stat-info">
+            <h3>{{ requests_count }}</h3>
+            <p>Buy Requests</p>
+        </div>
+    </div>
+    <div class="stat-card stat-reservations">
+        <div class="stat-icon">📋</div>
+        <div class="stat-info">
+            <h3>{{ reservations_count }}</h3>
+            <p>Reservations</p>
+        </div>
+    </div>
+    <div class="stat-card stat-payments">
+        <div class="stat-icon">💳</div>
+        <div class="stat-info">
+            <h3>{{ payments_count }}</h3>
+            <p>Payments</p>
+        </div>
+    </div>
+</div>
+
+<div class="quick-actions">
+    <h2>Quick Actions</h2>
+    <div class="action-buttons">
+        <a href="/admin/sellers" class="btn btn-primary">Verify Sellers</a>
+        <a href="/admin/webhooks" class="btn btn-secondary">View Webhook Logs</a>
+        <a href="/admin/export/sell_offers" class="btn btn-outline">Export Listings CSV</a>
+    </div>
+</div>
+{% endblock %}
