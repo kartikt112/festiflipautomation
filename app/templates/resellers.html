@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% set active = "resellers" %}
+{% block title %}FestiFlip Admin - Resellers{% endblock %}
+{% block page_title %}Fixed Resellers & Inventory{% endblock %}
+
+{% block content %}
+<div class="table-container">
+
+    <!-- Add Reseller -->
+    <h3 style="margin-bottom:8px;">Add Reseller</h3>
+    <form method="post" action="/admin/resellers/create" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:24px;padding:12px;background:#f8f9fa;border-radius:8px;">
+        <input type="text" name="name" placeholder="Name" required style="padding:6px 10px;border:1px solid #ccc;border-radius:4px;width:150px;">
+        <input type="text" name="phone" placeholder="Phone (+31...)" style="padding:6px 10px;border:1px solid #ccc;border-radius:4px;width:140px;">
+        <input type="text" name="pricing_model" placeholder="Pricing model" style="padding:6px 10px;border:1px solid #ccc;border-radius:4px;width:140px;">
+        <input type="text" name="notes" placeholder="Notes" style="padding:6px 10px;border:1px solid #ccc;border-radius:4px;flex:1;min-width:100px;">
+        <button type="submit" class="btn btn-success btn-sm" style="padding:6px 16px;">+ Add</button>
+    </form>
+
+    <!-- Resellers List -->
+    <h3 style="margin-bottom:8px;">Resellers</h3>
+    <table style="margin-bottom:32px;">
+        <thead>
+            <tr><th>ID</th><th>Name</th><th>Phone</th><th>Pricing</th><th>Notes</th><th>Active</th></tr>
+        </thead>
+        <tbody>
+            {% for r in resellers %}
+            <tr>
+                <td>{{ r.id }}</td>
+                <td><strong>{{ r.name }}</strong></td>
+                <td>{{ r.phone or '-' }}</td>
+                <td>{{ r.pricing_model or '-' }}</td>
+                <td>{{ r.notes or '' }}</td>
+                <td>{{ '✅' if r.active else '❌' }}</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="6" class="empty">No resellers yet</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Add Inventory Item -->
+    <h3 style="margin-bottom:8px;">Add Inventory</h3>
+    <form method="post" action="/admin/resellers/inventory/add" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:24px;padding:12px;background:#f8f9fa;border-radius:8px;">
+        <select name="reseller_id" required style="padding:6px 10px;border:1px solid #ccc;border-radius:4px;width:150px;">
+            <option value="">Select reseller</option>
+            {% for r in resellers %}
+            <option value="{{ r.id }}">{{ r.name }}</option>
+            {% endfor %}
+        </select>
+        <input type="text" name="event_name" placeholder="Event name" required style="padding:6px 10px;border:1px solid #ccc;border-radius:4px;width:140px;">
+        <input type="date" name="event_date" style="padding:6px 10px;border:1px solid #ccc;border-radius:4px;width:140px;">
+        <input type="text" name="ticket_type" placeholder="Type (optional)" style="padding:6px 10px;border:1px solid #ccc;border-radius:4px;width:110px;">
+        <input type="number" name="quantity" placeholder="Qty" value="1" min="1" style="padding:6px 10px;border:1px solid #ccc;border-radius:4px;width:70px;">
+        <input type="number" name="price_per_ticket" placeholder="Price" step="0.01" required style="padding:6px 10px;border:1px solid #ccc;border-radius:4px;width:90px;">
+        <input type="text" name="notes" placeholder="Notes" style="padding:6px 10px;border:1px solid #ccc;border-radius:4px;flex:1;min-width:80px;">
+        <button type="submit" class="btn btn-success btn-sm" style="padding:6px 16px;">+ Add</button>
+    </form>
+
+    <!-- Inventory List -->
+    <h3 style="margin-bottom:8px;">Inventory</h3>
+    <table>
+        <thead>
+            <tr><th>Event</th><th>Date</th><th>Type</th><th>Qty</th><th>Price</th><th>Status</th><th>Notes</th><th>Actions</th></tr>
+        </thead>
+        <tbody>
+            {% for item in inventory %}
+            <tr>
+                <td><strong>{{ item.event_name }}</strong></td>
+                <td>{{ item.event_date or '-' }}</td>
+                <td>{{ item.ticket_type or '-' }}</td>
+                <td>{{ item.quantity }}</td>
+                <td>€{{ "%.2f"|format(item.price_per_ticket) }}</td>
+                <td>
+                    {% if item.status.value == 'AVAILABLE' %}
+                    <span style="background:#22c55e;color:#fff;padding:2px 8px;border-radius:4px;font-size:12px;">AVAILABLE</span>
+                    {% elif item.status.value == 'CHECKING' %}
+                    <span style="background:#f59e0b;color:#fff;padding:2px 8px;border-radius:4px;font-size:12px;">CHECKING</span>
+                    {% elif item.status.value == 'CONFIRMED' %}
+                    <span style="background:#3b82f6;color:#fff;padding:2px 8px;border-radius:4px;font-size:12px;">CONFIRMED</span>
+                    {% elif item.status.value == 'SOLD' %}
+                    <span style="background:#6b7280;color:#fff;padding:2px 8px;border-radius:4px;font-size:12px;">SOLD</span>
+                    {% else %}
+                    <span style="background:#ef4444;color:#fff;padding:2px 8px;border-radius:4px;font-size:12px;">{{ item.status.value }}</span>
+                    {% endif %}
+                </td>
+                <td>{{ item.notes or '' }}</td>
+                <td>
+                    <form method="post" action="/admin/resellers/inventory/{{ item.id }}/delete" style="display:inline" onsubmit="return confirm('Delete?')">
+                        <button type="submit" class="btn btn-sm" style="background:#ef4444;color:#fff;padding:4px 10px;border-radius:4px;">Delete</button>
+                    </form>
+                </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="8" class="empty">No inventory items</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

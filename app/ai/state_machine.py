@@ -392,11 +392,18 @@ De gebruiker zei als datum: "{date_text}"
 Geef de exacte datum in YYYY-MM-DD formaat als JSON: {{"date": "YYYY-MM-DD"}}
 Als je de datum niet kunt bepalen: {{"date": null}}
 
-Voorbeelden (als vandaag 2026-03-26 donderdag is):
-- "volgende week donderdag" → {{"date": "2026-04-02"}}
-- "morgen" → {{"date": "2026-03-27"}}
-- "aankomende zaterdag" → {{"date": "2026-03-28"}}
-- "over 2 weken" → {{"date": "2026-04-09"}}
+BELANGRIJK: "komende", "aankomende", "aanstaande" = de EERSTVOLGENDE keer dat die dag voorkomt.
+- Als vandaag zondag is en iemand zegt "komende zondag", bedoelen ze VOLGENDE zondag (7 dagen later), niet vandaag.
+- "komende zaterdag" = de eerstvolgende zaterdag NA vandaag.
+- "dit weekend" = de eerstvolgende zaterdag + zondag NA vandaag.
+
+Voorbeelden (als vandaag {today} {today_day} is):
+- "volgende week donderdag" → de donderdag van volgende week
+- "morgen" → {today} + 1 dag
+- "aankomende zaterdag" / "komende zaterdag" → eerstvolgende zaterdag NA vandaag
+- "komende zondag" → eerstvolgende zondag NA vandaag
+- "over 2 weken" → {today} + 14 dagen
+- "dit weekend" → eerstvolgende zaterdag NA vandaag
 
 Geef alleen JSON."""
 
@@ -754,15 +761,23 @@ async def _handle_batch_sell(db: AsyncSession, phone: str, blocks: list) -> str:
             except Exception:
                 pass
             try:
-                from app.services.whapi import send_group_notification
+                from app.services.group_queue import enqueue_group_post
                 from app.message_templates.templates import sell_offer_group_broadcast
-                await send_group_notification(
-                    sell_offer_group_broadcast(
+                from datetime import date as _dt
+                _evt_date = None
+                if entities.get("event_date"):
+                    try: _evt_date = _dt.fromisoformat(str(entities["event_date"]))
+                    except (ValueError, TypeError): pass
+                await enqueue_group_post(
+                    db, sell_offer_id=offer.id,
+                    event_name=entities.get("event_name", ""),
+                    event_date=_evt_date,
+                    message_body=sell_offer_group_broadcast(
                         event_name=entities.get("event_name", ""),
                         event_date=entities.get("event_date", ""),
                         quantity=entities.get("quantity", 1),
                         price_per_ticket=entities.get("price_per_ticket", "N/A"),
-                    )
+                    ),
                 )
             except Exception:
                 pass
@@ -842,15 +857,22 @@ async def _handle_multi_event_batch(
             except Exception:
                 pass
             try:
-                from app.services.whapi import send_group_notification
+                from app.services.group_queue import enqueue_group_post
                 from app.message_templates.templates import sell_offer_group_broadcast
-                await send_group_notification(
-                    sell_offer_group_broadcast(
+                from datetime import date as _dt
+                _evt_date = None
+                if entities.get("event_date"):
+                    try: _evt_date = _dt.fromisoformat(str(entities["event_date"]))
+                    except (ValueError, TypeError): pass
+                await enqueue_group_post(
+                    db, sell_offer_id=offer.id,
+                    event_name=evt, event_date=_evt_date,
+                    message_body=sell_offer_group_broadcast(
                         event_name=evt,
                         event_date=entities.get("event_date", ""),
                         quantity=qty,
                         price_per_ticket=price,
-                    )
+                    ),
                 )
             except Exception:
                 pass
@@ -915,6 +937,11 @@ async def _process_message_inner(
     """Inner message processor — called under per-phone lock."""
     # Get or create conversation session
     session = await get_or_create_session(db, phone)
+
+    # FIX 3: If bot is paused for this chat (admin takeover), skip all processing
+    if getattr(session, "bot_paused", False):
+        logger.info(f"Bot paused for {phone}, skipping auto-reply")
+        return ""
 
     # Detect user language (sticky: once English, stays English until Dutch detected)
     session_lang = (session.collected_data or {}).get("_lang", "nl")
@@ -1487,6 +1514,27 @@ async def _handle_idle(
         missing = validate_entities(classification.intent, collected)
 
         if not missing:
+            # FEATURE 10: edition check before confirming
+            if collected.get("event_name") and not collected.get("ticket_type"):
+                try:
+                    from app.crud.event_configs import should_ask_edition
+                    if await should_ask_edition(db, collected["event_name"]):
+                        collected["_edition_asked"] = True
+                        await update_session(
+                            db, phone,
+                            current_intent=classification.intent,
+                            current_step=COLLECTING,
+                            collected_data=collected,
+                        )
+                        return _t(
+                            f"*{collected['event_name']}* heeft meerdere edities. Welke editie zoek je?\n"
+                            "(bijv. zaterdag, zondag, weekender, night, etc.)",
+                            f"*{collected['event_name']}* has multiple editions. Which edition are you looking for?\n"
+                            "(e.g. Saturday, Sunday, weekender, night, etc.)"
+                        )
+                except Exception as e:
+                    logger.error(f"Edition check failed: {e}")
+
             # All data collected in one message – proceed to confirm
             await update_session(
                 db, phone,
@@ -1496,16 +1544,23 @@ async def _handle_idle(
             )
             return _format_confirmation(classification.intent, collected)
         else:
-            # Need more data — send fill-in template if most fields still missing
+            # Need more data
             await update_session(
                 db, phone,
                 current_intent=classification.intent,
                 current_step=COLLECTING,
                 collected_data=collected,
             )
-            
-            # If most fields are missing, send the fill-in template
-            if len(missing) >= 2:
+
+            # FEATURE 5: If most fields missing (user just said "kopen"/"verkopen"),
+            # send form link instead of asking questions one by one.
+            if len(missing) >= 3 and not collected.get("event_name"):
+                from app.message_templates.templates import sell_form_link_message, buy_form_link_message
+                if classification.intent == "SELL_OFFER":
+                    return sell_form_link_message(lang=_lang())
+                else:
+                    return buy_form_link_message(lang=_lang())
+            elif len(missing) >= 2:
                 return _fill_template_with_data(classification.intent, collected)
             else:
                 return ask_missing_field(missing[0], classification.intent)
@@ -1752,10 +1807,22 @@ async def _handle_collecting(
 
 
     if not missing:
-        # Check standard missing fields first
-         # If ticket_type is missing but required due to ambiguity?
-         # We handled it above.
-        
+        # FEATURE 10: If this event requires an edition question and we don't have ticket_type yet
+        if merged.get("event_name") and not merged.get("ticket_type") and not merged.get("_edition_asked"):
+            try:
+                from app.crud.event_configs import should_ask_edition
+                if await should_ask_edition(db, merged["event_name"]):
+                    merged["_edition_asked"] = True
+                    await update_session(db, phone, collected_data=merged, current_intent=session.current_intent)
+                    return _t(
+                        f"*{merged['event_name']}* heeft meerdere edities. Welke editie zoek je?\n"
+                        "(bijv. zaterdag, zondag, weekender, night, etc.)",
+                        f"*{merged['event_name']}* has multiple editions. Which edition are you looking for?\n"
+                        "(e.g. Saturday, Sunday, weekender, night, etc.)"
+                    )
+            except Exception as e:
+                logger.error(f"Edition check failed: {e}")
+
         # All data collected
         await update_session(
             db, phone,
@@ -1866,6 +1933,43 @@ async def _handle_confirming(
             await update_session(db, phone, current_step=COLLECTING, collected_data=data)
             return _t("Hmm, er missen nog wat gegevens. ", "Hmm, some data is still missing. ") + ask_missing_field(missing[0], session.current_intent)
 
+        # FIX 2: Check price against admin-configured min/max for this event
+        try:
+            from app.crud.event_configs import find_matching_config
+            from datetime import date as _date_type
+            _evt_date = None
+            if data.get("event_date"):
+                try:
+                    _evt_date = _date_type.fromisoformat(str(data["event_date"]))
+                except (ValueError, TypeError):
+                    pass
+            price_rule = await find_matching_config(db, data.get("event_name", ""), _evt_date)
+            if price_rule:
+                _price = float(data.get("price_per_ticket") or data.get("max_price") or 0)
+                if _price > 0:
+                    if price_rule.min_price is not None and _price < float(price_rule.min_price):
+                        await update_session(db, phone, current_step=COLLECTING, collected_data=data)
+                        return _t(
+                            f"⚠️ De prijs €{_price:.2f} is te laag voor dit evenement. "
+                            f"De minimumprijs is €{float(price_rule.min_price):.2f} per ticket.\n\n"
+                            "Pas je prijs aan en probeer het opnieuw.",
+                            f"⚠️ The price €{_price:.2f} is too low for this event. "
+                            f"The minimum price is €{float(price_rule.min_price):.2f} per ticket.\n\n"
+                            "Adjust your price and try again."
+                        )
+                    if price_rule.max_price is not None and _price > float(price_rule.max_price):
+                        await update_session(db, phone, current_step=COLLECTING, collected_data=data)
+                        return _t(
+                            f"⚠️ De prijs €{_price:.2f} is te hoog voor dit evenement. "
+                            f"De maximumprijs is €{float(price_rule.max_price):.2f} per ticket.\n\n"
+                            "Pas je prijs aan en probeer het opnieuw.",
+                            f"⚠️ The price €{_price:.2f} is too high for this event. "
+                            f"The maximum price is €{float(price_rule.max_price):.2f} per ticket.\n\n"
+                            "Adjust your price and try again."
+                        )
+        except Exception as e:
+            logger.error(f"Price rule check failed: {e}")
+
         if session.current_intent == "BUY_REQUEST":
             result = await _save_buy_request(db, data)
             # Store undo reference before resetting — user can say "dat was fout" to cancel
@@ -1972,21 +2076,28 @@ async def _handle_confirming(
                 import logging
                 logging.getLogger(__name__).error(f"Waitlist processing failed: {e}")
 
-            # Send group notification via Whapi (independent of waitlist)
+            # Send group notification via queue (FIFO cooldown per event)
             try:
-                from app.services.whapi import send_group_notification
+                from app.services.group_queue import enqueue_group_post
                 from app.message_templates.templates import sell_offer_group_broadcast
-                await send_group_notification(
-                    sell_offer_group_broadcast(
+                from datetime import date as _dt
+                _evt_date = None
+                if data.get("event_date"):
+                    try: _evt_date = _dt.fromisoformat(str(data["event_date"]))
+                    except (ValueError, TypeError): pass
+                await enqueue_group_post(
+                    db, sell_offer_id=new_offer.id,
+                    event_name=data.get('event_name', ''),
+                    event_date=_evt_date,
+                    message_body=sell_offer_group_broadcast(
                         event_name=data.get('event_name', ''),
                         event_date=data.get('event_date', ''),
                         quantity=data.get('quantity', 1),
                         price_per_ticket=data.get('price_per_ticket', 'N/A'),
-                    )
+                    ),
                 )
             except Exception as e:
-                import logging
-                logging.getLogger(__name__).error(f"Whapi group notification failed: {e}")
+                logger.error(f"Group queue failed: {e}")
 
             # Multi-event flow: short confirmation for mid-flow, full details on last/single
             if multi_total and multi_done < multi_total:

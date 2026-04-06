@@ -11,6 +11,9 @@ from app.models.fixed_reseller import FixedReseller
 from app.models.webhook_log import WebhookLog
 from app.models.pending_confirmation import PendingConfirmation, ConfirmationStatus
 from app.models.chat_message import ChatMessage, MessageDirection
+from app.models.event_config import EventConfig
+from app.models.group_post_queue import GroupPostQueue, PostStatus
+from app.models.reseller_inventory import ResellerInventory, InventoryStatus
 
 __all__ = [
     "User", "UserRole",
@@ -24,4 +27,7 @@ __all__ = [
     "WebhookLog",
     "PendingConfirmation", "ConfirmationStatus",
     "ChatMessage", "MessageDirection",
+    "EventConfig",
+    "GroupPostQueue", "PostStatus",
+    "ResellerInventory", "InventoryStatus",
 ]

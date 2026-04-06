@@ -322,8 +322,40 @@ def waitlist_match_message(
     )
 
 
+def sell_form_link_message(lang: str = "nl") -> str:
+    """Send form link to seller instead of asking questions one by one."""
+    if lang == "en":
+        return (
+            "Please fill in the sell form via the link below — follow all steps, "
+            "otherwise we can NOT help you right away.\n\n"
+            "🔗 https://festiflip.nl/sellform\n\n"
+            "After you're done, send us the message from the form so we can process it!"
+        )
+    return (
+        "Kan je het verkoopformulier invullen via de link hieronder — "
+        "doorloop alle stappen, anders kan je NIET direct geholpen worden.\n\n"
+        "🔗 https://festiflip.nl/sellform\n\n"
+        "Stuur ons daarna het berichtje vanuit het formulier, dan verwerken we het!"
+    )
+
+
+def buy_form_link_message(lang: str = "nl") -> str:
+    """Send form link to buyer instead of asking questions one by one."""
+    if lang == "en":
+        return (
+            "If you're looking for tickets, you can fill in the form below.\n\n"
+            "🔗 https://festiflip.nl/searchform\n\n"
+            "Follow all steps and send us the message so we can post your request!"
+        )
+    return (
+        "Als je op zoek bent naar tickets, dan kan je het formulier invullen.\n\n"
+        "🔗 https://festiflip.nl/searchform\n\n"
+        "Volg alle stappen en stuur ons het berichtje wat we kunnen posten voor je!"
+    )
+
+
 def sell_fill_template(event_name: str = "", event_date: str = "", quantity: str = "", price: str = "", lang: str = "nl") -> str:
-    """Fill-in template for sellers to submit all details in one message."""
+    """Fill-in template for sellers to submit all details in one message (fallback)."""
     if lang == "en":
         return (
             "Send me the following info (can be in one message):\n\n"

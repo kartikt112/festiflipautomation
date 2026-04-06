@@ -35,17 +35,45 @@
                     <span class="text-muted">No proof</span>
                     {% endif %}
                 </td>
-                <td><span class="badge badge-unverified">{{ seller.verification_status.value }}</span></td>
+                <td>
+                    {% if seller.verification_status.value == 'VERIFIED' %}
+                    <span class="badge badge-verified" style="background:#22c55e;color:#fff;padding:2px 8px;border-radius:4px;">VERIFIED</span>
+                    {% elif seller.verification_status.value == 'TRUSTED' %}
+                    <span class="badge badge-trusted" style="background:#3b82f6;color:#fff;padding:2px 8px;border-radius:4px;">TRUSTED</span>
+                    {% else %}
+                    <span class="badge badge-unverified">UNVERIFIED</span>
+                    {% endif %}
+                </td>
                 <td>
                     <div class="action-group">
-                        <form method="post" action="/admin/sellers/{{ seller.id }}/verify">
+                        {% if seller.verification_status.value == 'UNVERIFIED' %}
+                        <form method="post" action="/admin/sellers/{{ seller.id }}/verify" style="display:inline">
                             <input type="hidden" name="status" value="VERIFIED">
                             <button type="submit" class="btn btn-success btn-sm">✅ Verify</button>
                         </form>
-                        <form method="post" action="/admin/sellers/{{ seller.id }}/verify">
+                        <form method="post" action="/admin/sellers/{{ seller.id }}/verify" style="display:inline">
                             <input type="hidden" name="status" value="TRUSTED">
                             <button type="submit" class="btn btn-primary btn-sm">⭐ Trust</button>
                         </form>
+                        {% elif seller.verification_status.value == 'VERIFIED' %}
+                        <form method="post" action="/admin/sellers/{{ seller.id }}/verify" style="display:inline">
+                            <input type="hidden" name="status" value="TRUSTED">
+                            <button type="submit" class="btn btn-primary btn-sm">⭐ Upgrade</button>
+                        </form>
+                        <form method="post" action="/admin/sellers/{{ seller.id }}/verify" style="display:inline">
+                            <input type="hidden" name="status" value="UNVERIFIED">
+                            <button type="submit" class="btn btn-sm" style="background:#ef4444;color:#fff;">❌ Remove</button>
+                        </form>
+                        {% elif seller.verification_status.value == 'TRUSTED' %}
+                        <form method="post" action="/admin/sellers/{{ seller.id }}/verify" style="display:inline">
+                            <input type="hidden" name="status" value="VERIFIED">
+                            <button type="submit" class="btn btn-success btn-sm">↓ Downgrade</button>
+                        </form>
+                        <form method="post" action="/admin/sellers/{{ seller.id }}/verify" style="display:inline">
+                            <input type="hidden" name="status" value="UNVERIFIED">
+                            <button type="submit" class="btn btn-sm" style="background:#ef4444;color:#fff;">❌ Remove</button>
+                        </form>
+                        {% endif %}
                     </div>
                 </td>
             </tr>

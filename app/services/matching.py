@@ -129,6 +129,27 @@ async def auto_match_and_notify(
     """
     from datetime import datetime, timezone, timedelta
 
+    # FEATURE 8: Check reseller inventory first
+    try:
+        from app.services.reseller import find_reseller_inventory, request_availability_check
+        from datetime import date as _date_type
+        _evt_date = None
+        if event_date:
+            try: _evt_date = _date_type.fromisoformat(str(event_date))
+            except (ValueError, TypeError): pass
+        reseller_item = await find_reseller_inventory(
+            db, event_name, quantity,
+            max_price=float(max_price) if max_price else None,
+            event_date=_evt_date,
+        )
+        if reseller_item and buyer_phone:
+            sent = await request_availability_check(db, reseller_item, buyer_phone)
+            if sent:
+                logger.info(f"Reseller availability check sent for {event_name}")
+                return {"pending_confirmation": True, "reseller_check": True}
+    except Exception as e:
+        logger.error(f"Reseller check failed: {e}")
+
     matches = await find_matching_offers(db, event_name, quantity, max_price, ticket_type, event_date=event_date)
 
     if not matches:

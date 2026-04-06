@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% set active = "events" %}
+{% block title %}FestiFlip Admin - Event Config{% endblock %}
+{% block page_title %}Event Configuration{% endblock %}
+
+{% block content %}
+<div class="table-container">
+    <p style="margin-bottom:16px;color:#666;">Set min/max price per event and mark events that need an edition question. The keyword is matched as a substring (e.g. "DGTL" matches "DGTL Eastern").</p>
+
+    <!-- Add new config form -->
+    <form method="post" action="/admin/events/create" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:24px;padding:16px;background:#f8f9fa;border-radius:8px;">
+        <input type="text" name="event_keyword" placeholder="Keyword (e.g. DGTL)" required style="padding:6px 10px;border:1px solid #ccc;border-radius:4px;width:140px;">
+        <input type="date" name="event_date" placeholder="Date (optional)" style="padding:6px 10px;border:1px solid #ccc;border-radius:4px;width:150px;">
+        <input type="number" name="min_price" placeholder="Min price" step="0.01" style="padding:6px 10px;border:1px solid #ccc;border-radius:4px;width:100px;">
+        <input type="number" name="max_price" placeholder="Max price" step="0.01" style="padding:6px 10px;border:1px solid #ccc;border-radius:4px;width:100px;">
+        <label style="display:flex;align-items:center;gap:4px;cursor:pointer;">
+            <input type="checkbox" name="ask_edition" value="1"> Ask edition
+        </label>
+        <input type="text" name="notes" placeholder="Notes (optional)" style="padding:6px 10px;border:1px solid #ccc;border-radius:4px;flex:1;min-width:120px;">
+        <button type="submit" class="btn btn-success btn-sm" style="padding:6px 16px;">+ Add</button>
+    </form>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Keyword</th>
+                <th>Date</th>
+                <th>Min Price</th>
+                <th>Max Price</th>
+                <th>Ask Edition</th>
+                <th>Notes</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for cfg in configs %}
+            <tr>
+                <td><strong>{{ cfg.event_keyword }}</strong></td>
+                <td>{{ cfg.event_date or '-' }}</td>
+                <td>{{ ('€%.2f' % cfg.min_price) if cfg.min_price else '-' }}</td>
+                <td>{{ ('€%.2f' % cfg.max_price) if cfg.max_price else '-' }}</td>
+                <td>{{ '✅' if cfg.ask_edition else '-' }}</td>
+                <td>{{ cfg.notes or '' }}</td>
+                <td>
+                    <form method="post" action="/admin/events/{{ cfg.id }}/delete" style="display:inline" onsubmit="return confirm('Delete this config?')">
+                        <button type="submit" class="btn btn-sm" style="background:#ef4444;color:#fff;padding:4px 10px;border-radius:4px;">Delete</button>
+                    </form>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="7" class="empty">No event configs yet. Add one above.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

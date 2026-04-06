@@ -114,17 +114,20 @@ async def payments_page(request: Request, db: AsyncSession = Depends(get_db)):
 
 @router.get("/sellers", response_class=HTMLResponse)
 async def sellers_page(request: Request, db: AsyncSession = Depends(get_db)):
-    """View sellers for verification."""
+    """View all sellers with verification status (unverified first)."""
     from app.models.sell_offer import SellOffer
     result = await db.execute(
         select(SellOffer)
-        .where(SellOffer.verification_status == VerificationStatus.UNVERIFIED)
-        .order_by(SellOffer.created_at.desc())
+        .order_by(
+            # Unverified first, then verified, then trusted
+            (SellOffer.verification_status == VerificationStatus.UNVERIFIED).desc(),
+            SellOffer.created_at.desc(),
+        )
     )
-    unverified = list(result.scalars().all())
+    sellers = list(result.scalars().all())
     return templates.TemplateResponse("sellers.html", {
         "request": request,
-        "sellers": unverified,
+        "sellers": sellers,
     })
 
 
@@ -253,6 +256,191 @@ async def export_table(table: str, db: AsyncSession = Depends(get_db)):
     )
 
 
+# ─── Event Configuration (Price Rules + Editions) ───
+
+@router.get("/events", response_class=HTMLResponse)
+async def events_config_page(request: Request, db: AsyncSession = Depends(get_db)):
+    """Manage event price rules and edition settings."""
+    from app.crud.event_configs import get_all_configs
+    configs = await get_all_configs(db)
+    return templates.TemplateResponse("event_configs.html", {
+        "request": request,
+        "configs": configs,
+    })
+
+
+@router.post("/events/create")
+async def create_event_config(
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+):
+    """Create a new event config."""
+    from app.models.event_config import EventConfig
+    data = await request.form()
+
+    event_date = None
+    if data.get("event_date"):
+        from datetime import date
+        try:
+            event_date = date.fromisoformat(str(data["event_date"]))
+        except ValueError:
+            pass
+
+    min_price = float(data["min_price"]) if data.get("min_price") else None
+    max_price = float(data["max_price"]) if data.get("max_price") else None
+
+    config = EventConfig(
+        event_keyword=str(data["event_keyword"]).strip(),
+        event_date=event_date,
+        min_price=min_price,
+        max_price=max_price,
+        ask_edition=bool(data.get("ask_edition")),
+        notes=str(data.get("notes", "")).strip() or None,
+    )
+    db.add(config)
+    await db.commit()
+
+    from fastapi.responses import RedirectResponse
+    return RedirectResponse(url="/admin/events", status_code=303)
+
+
+@router.post("/events/{config_id}/delete")
+async def delete_event_config(config_id: int, db: AsyncSession = Depends(get_db)):
+    """Delete an event config."""
+    from app.crud.event_configs import get_config_by_id
+    config = await get_config_by_id(db, config_id)
+    if not config:
+        raise HTTPException(status_code=404, detail="Config not found")
+    await db.delete(config)
+    await db.commit()
+
+    from fastapi.responses import RedirectResponse
+    return RedirectResponse(url="/admin/events", status_code=303)
+
+
+@router.post("/events/{config_id}/update")
+async def update_event_config(
+    config_id: int,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+):
+    """Update an event config."""
+    from app.crud.event_configs import get_config_by_id
+    config = await get_config_by_id(db, config_id)
+    if not config:
+        raise HTTPException(status_code=404, detail="Config not found")
+
+    data = await request.form()
+
+    config.event_keyword = str(data["event_keyword"]).strip()
+
+    if data.get("event_date"):
+        from datetime import date
+        try:
+            config.event_date = date.fromisoformat(str(data["event_date"]))
+        except ValueError:
+            config.event_date = None
+    else:
+        config.event_date = None
+
+    config.min_price = float(data["min_price"]) if data.get("min_price") else None
+    config.max_price = float(data["max_price"]) if data.get("max_price") else None
+    config.ask_edition = bool(data.get("ask_edition"))
+    config.notes = str(data.get("notes", "")).strip() or None
+
+    await db.commit()
+
+    from fastapi.responses import RedirectResponse
+    return RedirectResponse(url="/admin/events", status_code=303)
+
+
+# ─── Reseller Inventory ───
+
+@router.get("/resellers", response_class=HTMLResponse)
+async def resellers_page(request: Request, db: AsyncSession = Depends(get_db)):
+    """Manage reseller inventory."""
+    from app.models.fixed_reseller import FixedReseller
+    from app.models.reseller_inventory import ResellerInventory
+
+    resellers_result = await db.execute(select(FixedReseller).order_by(FixedReseller.name))
+    resellers = list(resellers_result.scalars().all())
+
+    inventory_result = await db.execute(
+        select(ResellerInventory).order_by(ResellerInventory.created_at.desc())
+    )
+    inventory = list(inventory_result.scalars().all())
+
+    return templates.TemplateResponse("resellers.html", {
+        "request": request,
+        "resellers": resellers,
+        "inventory": inventory,
+    })
+
+
+@router.post("/resellers/create")
+async def create_reseller(request: Request, db: AsyncSession = Depends(get_db)):
+    """Create a new fixed reseller."""
+    from app.models.fixed_reseller import FixedReseller
+    data = await request.form()
+
+    reseller = FixedReseller(
+        name=str(data["name"]).strip(),
+        phone=str(data.get("phone", "")).strip() or None,
+        pricing_model=str(data.get("pricing_model", "")).strip() or None,
+        notes=str(data.get("notes", "")).strip() or None,
+    )
+    db.add(reseller)
+    await db.commit()
+
+    from fastapi.responses import RedirectResponse
+    return RedirectResponse(url="/admin/resellers", status_code=303)
+
+
+@router.post("/resellers/inventory/add")
+async def add_inventory_item(request: Request, db: AsyncSession = Depends(get_db)):
+    """Add a ticket to reseller inventory."""
+    from app.models.reseller_inventory import ResellerInventory
+    data = await request.form()
+
+    event_date = None
+    if data.get("event_date"):
+        from datetime import date
+        try:
+            event_date = date.fromisoformat(str(data["event_date"]))
+        except ValueError:
+            pass
+
+    item = ResellerInventory(
+        reseller_id=int(data["reseller_id"]),
+        event_name=str(data["event_name"]).strip(),
+        event_date=event_date,
+        ticket_type=str(data.get("ticket_type", "")).strip() or None,
+        quantity=int(data.get("quantity", 1)),
+        price_per_ticket=float(data["price_per_ticket"]),
+        notes=str(data.get("notes", "")).strip() or None,
+    )
+    db.add(item)
+    await db.commit()
+
+    from fastapi.responses import RedirectResponse
+    return RedirectResponse(url="/admin/resellers", status_code=303)
+
+
+@router.post("/resellers/inventory/{item_id}/delete")
+async def delete_inventory_item(item_id: int, db: AsyncSession = Depends(get_db)):
+    """Delete an inventory item."""
+    from app.models.reseller_inventory import ResellerInventory
+    result = await db.execute(select(ResellerInventory).where(ResellerInventory.id == item_id))
+    item = result.scalar_one_or_none()
+    if not item:
+        raise HTTPException(status_code=404, detail="Item not found")
+    await db.delete(item)
+    await db.commit()
+
+    from fastapi.responses import RedirectResponse
+    return RedirectResponse(url="/admin/resellers", status_code=303)
+
+
 # ─── Chat Dashboard ───
 
 @router.get("/chats", response_class=HTMLResponse)
@@ -305,11 +493,21 @@ async def chats_page(
         )
         messages = list(msgs_result.scalars().all())
 
+    # Check if bot is paused for selected phone
+    bot_paused = False
+    if phone:
+        from app.models.chat_session import ChatSession
+        sess_result = await db.execute(select(ChatSession).where(ChatSession.phone == phone))
+        sess = sess_result.scalar_one_or_none()
+        if sess:
+            bot_paused = getattr(sess, "bot_paused", False)
+
     return templates.TemplateResponse("chats.html", {
         "request": request,
         "contacts": contacts,
         "selected_phone": phone,
         "messages": messages,
+        "bot_paused": bot_paused,
     })
 
 
@@ -334,6 +532,83 @@ async def send_chat_message(request: Request, db: AsyncSession = Depends(get_db)
     except Exception as e:
         logger.error(f"Admin send message failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/chats/stream")
+async def chat_stream(phone: str, db: AsyncSession = Depends(get_db)):
+    """SSE endpoint for real-time chat updates. Streams new messages as they arrive."""
+    from fastapi.responses import StreamingResponse
+    from app.models.chat_message import ChatMessage
+    import asyncio
+    import json
+
+    async def event_generator():
+        last_id = 0
+        # Get the latest message ID as starting point
+        result = await db.execute(
+            select(func.max(ChatMessage.id)).where(ChatMessage.phone == phone)
+        )
+        last_id = result.scalar() or 0
+
+        while True:
+            await asyncio.sleep(1.5)  # Poll interval
+            try:
+                # Check for new messages since last_id
+                result = await db.execute(
+                    select(ChatMessage)
+                    .where(ChatMessage.phone == phone, ChatMessage.id > last_id)
+                    .order_by(ChatMessage.id.asc())
+                )
+                new_msgs = list(result.scalars().all())
+
+                if new_msgs:
+                    last_id = new_msgs[-1].id
+                    for msg in new_msgs:
+                        data = json.dumps({
+                            "id": msg.id,
+                            "direction": msg.direction.value,
+                            "body": msg.body,
+                            "time": msg.created_at.strftime("%I:%M %p"),
+                            "date": msg.created_at.strftime("%d %B %Y"),
+                        })
+                        yield f"data: {data}\n\n"
+                else:
+                    yield ": keepalive\n\n"
+            except Exception:
+                yield ": error\n\n"
+                break
+
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        },
+    )
+
+
+@router.post("/chats/pause")
+async def toggle_bot_pause(request: Request, db: AsyncSession = Depends(get_db)):
+    """Toggle bot on/off for a specific chat. When paused, bot won't auto-reply."""
+    from app.models.chat_session import ChatSession
+    from app.crud.chat_sessions import get_or_create_session
+
+    data = await request.json()
+    phone = data.get("phone", "").strip()
+    paused = data.get("paused", True)
+
+    if not phone:
+        raise HTTPException(status_code=400, detail="Phone is required")
+
+    session = await get_or_create_session(db, phone)
+    session.bot_paused = bool(paused)
+    await db.commit()
+
+    status = "paused" if paused else "active"
+    logger.info(f"Bot {status} for {phone}")
+    return {"status": "ok", "bot_paused": session.bot_paused}
 
 
 @router.post("/chats/reset")

@@ -124,7 +124,17 @@
             </div>
         </div>
         
-        <div class="flex items-center gap-4 text-gray-500 dark:text-gray-300">
+        <div class="flex items-center gap-2 text-gray-500 dark:text-gray-300">
+            <!-- Pause/Resume Bot Button -->
+            <button id="pauseBtn" onclick="toggleBotPause('{{ selected_phone }}')" class="flex items-center gap-1 text-xs font-semibold border px-3 py-1.5 rounded-md transition shadow-sm {% if bot_paused %}bg-red-100 dark:bg-red-900/30 border-red-300 dark:border-red-700 text-red-700 dark:text-red-400{% else %}bg-white dark:bg-[#2a3942] border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-[#374c55]{% endif %}" title="{{ 'Bot is paused — click to resume' if bot_paused else 'Pause bot for this chat' }}">
+                {% if bot_paused %}
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+                <span class="hidden sm:inline">Resume Bot</span>
+                {% else %}
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+                <span class="hidden sm:inline">Pause Bot</span>
+                {% endif %}
+            </button>
             <!-- Reset Session Button -->
             <button onclick="resetSession('{{ selected_phone }}')" class="flex items-center gap-1 text-xs font-semibold bg-white dark:bg-[#2a3942] border border-gray-300 dark:border-gray-600 px-3 py-1.5 rounded-md hover:bg-gray-50 dark:hover:bg-[#374c55] transition shadow-sm" title="Reset this conversation">
                 <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46A7.93 7.93 0 0020 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74A7.93 7.93 0 004 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/></svg>
@@ -195,6 +205,53 @@
   </div>
 
   <script>
+    // Real-time chat updates via SSE (FIX 9)
+    {% if selected_phone %}
+    (function() {
+        const phone = '{{ selected_phone }}';
+        const area = document.getElementById('messagesArea');
+        if (!area) return;
+
+        const evtSrc = new EventSource(`/admin/chats/stream?phone=${encodeURIComponent(phone)}`);
+        let lastDate = '';
+
+        evtSrc.onmessage = function(event) {
+            try {
+                const msg = JSON.parse(event.data);
+
+                // Add date separator if needed
+                if (msg.date !== lastDate) {
+                    const dateSep = document.createElement('div');
+                    dateSep.className = 'flex justify-center mb-4 mt-2';
+                    dateSep.innerHTML = `<span class="bg-white/90 dark:bg-[#182229]/90 text-gray-600 dark:text-gray-300 text-xs px-3 py-1.5 rounded-lg shadow-sm border border-black/5 dark:border-none uppercase tracking-wide">${msg.date}</span>`;
+                    area.appendChild(dateSep);
+                    lastDate = msg.date;
+                }
+
+                const isInbound = msg.direction === 'INBOUND';
+                const wrapper = document.createElement('div');
+                wrapper.className = `flex mb-2 ${isInbound ? 'justify-start' : 'justify-end'}`;
+
+                const bubble = document.createElement('div');
+                bubble.className = `relative max-w-[85%] sm:max-w-[70%] px-2 py-1.5 rounded-lg shadow-sm ${isInbound ? 'bg-white dark:bg-[#202c33] rounded-tl-none' : 'bg-[#d9fdd3] dark:bg-[#005c4b] rounded-tr-none'}`;
+
+                const body = msg.body.replace(/\n/g, '<br>');
+                bubble.innerHTML = `<div class="text-[14px] leading-relaxed text-[#111b21] dark:text-[#e9edef] whitespace-pre-wrap word-break">${body}<span class="inline-block w-[60px] h-[1px]"></span></div><div class="absolute bottom-1 right-2 flex items-center justify-end text-[10px] text-gray-500 dark:text-gray-400 gap-1 mt-1 leading-none"><span>${msg.time}</span></div>`;
+
+                wrapper.appendChild(bubble);
+                area.appendChild(wrapper);
+                area.scrollTop = area.scrollHeight;
+            } catch(e) { /* ignore parse errors for keepalive */ }
+        };
+
+        evtSrc.onerror = function() {
+            // Reconnect after 5 seconds
+            evtSrc.close();
+            setTimeout(() => location.reload(), 5000);
+        };
+    })();
+    {% endif %}
+
     // Search toggle
     const searchBtn = document.getElementById('search-btn');
     const searchContainer = document.getElementById('search-container');
@@ -225,6 +282,28 @@
     const messagesArea = document.getElementById("messagesArea");
     if (messagesArea) {
         messagesArea.scrollTop = messagesArea.scrollHeight;
+    }
+
+    // Toggle bot pause
+    let botPaused = {{ 'true' if bot_paused else 'false' }};
+    async function toggleBotPause(phone) {
+        const newState = !botPaused;
+        try {
+            const response = await fetch('/admin/chats/pause', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ phone: phone, paused: newState })
+            });
+            if (response.ok) {
+                botPaused = newState;
+                location.reload();
+            } else {
+                alert("Failed to toggle bot pause.");
+            }
+        } catch (error) {
+            console.error(error);
+            alert("Error toggling bot pause.");
+        }
     }
 
     // Reset session

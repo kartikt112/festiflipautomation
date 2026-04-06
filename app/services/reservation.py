@@ -165,6 +165,16 @@ async def complete_reservation(
         db, reservation.sell_offer_id, OfferStatus.SOLD
     )
 
+    # 3b. FEATURE 7: Promote next queued group post for this event
+    try:
+        from app.services.group_queue import mark_posted_as_expired, promote_next_for_event
+        offer_for_queue = await sell_crud.get_sell_offer(db, reservation.sell_offer_id)
+        if offer_for_queue:
+            await mark_posted_as_expired(db, offer_for_queue.id)
+            await promote_next_for_event(db, offer_for_queue.event_name, offer_for_queue.event_date)
+    except Exception as e:
+        logger.error(f"Group queue promotion failed: {e}")
+
     # 4. Update payment record
     payment = await pay_crud.get_payment_by_reservation(db, reservation_id)
     if payment:
