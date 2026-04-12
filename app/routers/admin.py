@@ -4,10 +4,11 @@ import logging
 import io
 import csv
 from fastapi import APIRouter, Request, Depends, HTTPException, Form, UploadFile, File
-from fastapi.responses import HTMLResponse, StreamingResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, StreamingResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.config import settings
 from app.database import get_db
 from app.crud import sell_offers as sell_crud
 from app.crud import buy_requests as buy_crud
@@ -20,6 +21,27 @@ from app.services.stripe_service import create_refund
 from sqlalchemy import select, func
 
 logger = logging.getLogger(__name__)
+
+
+# ─── Auth Helper ───
+
+def check_auth(request: Request):
+    """Check if user is authenticated. Returns RedirectResponse if not, else None."""
+    email = request.session.get("email")
+    if not email or email.lower() not in settings.allowed_emails_set:
+        return RedirectResponse(url="/auth/login?error=not_authenticated", status_code=302)
+    return None
+
+
+def get_user_info(request: Request) -> dict:
+    """Get the logged-in user info from session."""
+    return {
+        "user_email": request.session.get("email", ""),
+        "user_name": request.session.get("name", ""),
+        "user_picture": request.session.get("picture", ""),
+    }
+
+
 router = APIRouter(prefix="/admin", tags=["Admin"])
 templates = Jinja2Templates(directory="app/templates")
 

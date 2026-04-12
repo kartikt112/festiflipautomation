@@ -7,10 +7,15 @@ from fastapi import FastAPI, Depends
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from starlette.middleware.sessions import SessionMiddleware
+
 from app.config import settings
 from app.database import init_db, get_db
-from app.routers import health, whatsapp, stripe_webhook, admin, whapi_webhook
+from app.routers import health, whatsapp, stripe_webhook, admin, whapi_webhook, auth
 from app.services.scheduler import start_scheduler, stop_scheduler
+
+import firebase_admin
+from firebase_admin import credentials
 
 # Configure logging – stdout always; rotating file only in development
 logging.basicConfig(
@@ -27,10 +32,22 @@ async def lifespan(app: FastAPI):
     # Startup
     logger.info(f"Starting FestiFlip ({settings.APP_ENV})")
 
-    # Initialize database (creates tables if using SQLite for dev)
+    # Initialize database
     if "sqlite" in settings.DATABASE_URL:
         await init_db()
         logger.info("SQLite database initialized")
+
+    # Initialize Firebase Admin SDK
+    import os
+    if os.path.exists(settings.FIREBASE_CREDENTIALS_PATH):
+        try:
+            cred = credentials.Certificate(settings.FIREBASE_CREDENTIALS_PATH)
+            firebase_admin.initialize_app(cred)
+            logger.info("Firebase Admin SDK initialized")
+        except Exception as e:
+            logger.error(f"Failed to initialize Firebase Admin SDK: {e}")
+    else:
+        logger.warning(f"Firebase credentials file not found at {settings.FIREBASE_CREDENTIALS_PATH}")
 
     # Start background scheduler
     start_scheduler()
@@ -50,6 +67,9 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+# Session middleware for Google OAuth
+app.add_middleware(SessionMiddleware, secret_key=settings.SESSION_SECRET_KEY)
+
 # Mount static files
 from pathlib import Path as _Path
 _static_dir = _Path(__file__).parent / "static"
@@ -60,6 +80,7 @@ if _static_dir.exists():
 app.include_router(health.router)
 app.include_router(whatsapp.router)
 app.include_router(stripe_webhook.router)
+app.include_router(auth.router)
 app.include_router(admin.router)
 app.include_router(whapi_webhook.router)
 

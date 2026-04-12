@@ -2,7 +2,8 @@
 
 from pydantic_settings import BaseSettings
 from pydantic import Field
-from typing import Optional
+from typing import Optional, Set
+import secrets
 
 
 class Settings(BaseSettings):
@@ -47,6 +48,16 @@ class Settings(BaseSettings):
 
     # ─── Whapi (Unofficial API) ───
     WHAPI_TOKEN: Optional[str] = None
+
+    # ─── Firebase Auth ───
+    FIREBASE_CREDENTIALS_PATH: str = "./fir-admin-5be88-firebase-adminsdk-fbsvc-cdd751856c.json"
+    GOOGLE_ALLOWED_EMAILS: str = "zakelijkrk04@gmail.com,Hassanharouane1@gmail.com"
+    SESSION_SECRET_KEY: str = Field(default_factory=lambda: secrets.token_hex(32))
+
+    @property
+    def allowed_emails_set(self) -> Set[str]:
+        """Return normalized set of allowed emails."""
+        return {e.strip().lower() for e in self.GOOGLE_ALLOWED_EMAILS.split(",") if e.strip()}
 
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
 
