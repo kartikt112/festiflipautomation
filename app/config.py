@@ -51,7 +51,7 @@ class Settings(BaseSettings):
 
     # ─── Firebase Auth ───
     FIREBASE_CREDENTIALS_PATH: str = "./fir-admin-5be88-firebase-adminsdk-fbsvc-cdd751856c.json"
-    GOOGLE_ALLOWED_EMAILS: str = "zakelijkrk04@gmail.com,Hassanharouane1@gmail.com"
+    GOOGLE_ALLOWED_EMAILS: str = "zakelijkrk04@gmail.com,Hassanharouane1@gmail.com,vooronzin030@gmail.com"
     SESSION_SECRET_KEY: str = Field(default_factory=lambda: secrets.token_hex(32))
 
     @property
