@@ -64,7 +64,7 @@ async def google_callback(request: Request):
 
         if not user_info:
             logger.error("No user info returned from Google")
-            return RedirectResponse(url="/auth/signin?error=no_user_info")
+            return RedirectResponse(url="/auth/signin?error=no_user_info", status_code=302)
 
         email = user_info.get("email", "").lower()
         name = user_info.get("name", "")
@@ -75,7 +75,7 @@ async def google_callback(request: Request):
         # Check whitelist
         if email not in settings.allowed_emails_set:
             logger.warning(f"Access denied for: {email}")
-            return RedirectResponse(url=f"/auth/access_denied?email={email}")
+            return RedirectResponse(url=f"/auth/access_denied?email={email}", status_code=302)
 
         # Authorized — set session
         request.session["email"] = email
@@ -83,11 +83,11 @@ async def google_callback(request: Request):
         request.session["picture"] = picture
 
         logger.info(f"Login successful: {email}")
-        return RedirectResponse(url="/admin/")
+        return RedirectResponse(url="/admin", status_code=302)
 
     except Exception as e:
         logger.error(f"Google OAuth callback failed: {e}", exc_info=True)
-        return RedirectResponse(url="/auth/signin?error=oauth_failed")
+        return RedirectResponse(url="/auth/signin?error=oauth_failed", status_code=302)
 
 
 @router.get("/access_denied", response_class=HTMLResponse)
