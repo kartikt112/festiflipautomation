@@ -39,15 +39,28 @@ async def lifespan(app: FastAPI):
 
     # Initialize Firebase Admin SDK
     import os
-    if os.path.exists(settings.FIREBASE_CREDENTIALS_PATH):
+    import json
+    
+    # Check if JSON payload is provided natively via env var (useful for Railway)
+    firebase_json_str = os.getenv("FIREBASE_CREDENTIALS_JSON")
+    if firebase_json_str:
+        try:
+            cred_dict = json.loads(firebase_json_str)
+            cred = credentials.Certificate(cred_dict)
+            firebase_admin.initialize_app(cred)
+            logger.info("Firebase Admin SDK initialized from FIREBASE_CREDENTIALS_JSON")
+        except Exception as e:
+            logger.error(f"Failed to initialize Firebase from JSON string: {e}")
+    # Fallback to local file path
+    elif os.path.exists(settings.FIREBASE_CREDENTIALS_PATH):
         try:
             cred = credentials.Certificate(settings.FIREBASE_CREDENTIALS_PATH)
             firebase_admin.initialize_app(cred)
-            logger.info("Firebase Admin SDK initialized")
+            logger.info("Firebase Admin SDK initialized from file path")
         except Exception as e:
-            logger.error(f"Failed to initialize Firebase Admin SDK: {e}")
+            logger.error(f"Failed to initialize Firebase Admin SDK from file: {e}")
     else:
-        logger.warning(f"Firebase credentials file not found at {settings.FIREBASE_CREDENTIALS_PATH}")
+        logger.warning("Firebase credentials not found. Authentication will fail.")
 
     # Start background scheduler
     start_scheduler()
