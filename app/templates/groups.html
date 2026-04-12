@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% set active = "groups" %}
+{% block title %}FestiFlip Admin - WhatsApp Groups{% endblock %}
+{% block page_title %}WhatsApp Groups{% endblock %}
+
+{% block content %}
+<div class="table-container">
+    <p style="margin-bottom:16px;color:#666;">Manage which WhatsApp groups receive sell/buy broadcasts. Groups are auto-detected when the Whapi number receives messages in a group.</p>
+
+    <div style="display:flex;gap:8px;margin-bottom:24px;flex-wrap:wrap;">
+        <!-- Sync from Whapi -->
+        <form method="post" action="/admin/groups/sync" style="display:inline">
+            <button type="submit" class="btn btn-primary btn-sm" style="padding:8px 20px;">🔄 Sync Groups from Whapi</button>
+        </form>
+    </div>
+
+    <!-- Manual add form -->
+    <form method="post" action="/admin/groups/add" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:24px;padding:12px;background:#f8f9fa;border-radius:8px;">
+        <input type="text" name="group_id" placeholder="Group ID (e.g. 120363...@g.us)" required style="padding:6px 10px;border:1px solid #ccc;border-radius:4px;width:300px;">
+        <input type="text" name="group_name" placeholder="Name (optional)" style="padding:6px 10px;border:1px solid #ccc;border-radius:4px;width:200px;">
+        <button type="submit" class="btn btn-success btn-sm" style="padding:6px 16px;">+ Add Manually</button>
+    </form>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Group ID</th>
+                <th>Name</th>
+                <th>Status</th>
+                <th>Source</th>
+                <th>Added</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for g in groups %}
+            <tr>
+                <td style="font-family:monospace;font-size:12px;">{{ g.group_id }}</td>
+                <td><strong>{{ g.group_name or '-' }}</strong></td>
+                <td>
+                    {% if g.enabled %}
+                    <span style="background:#22c55e;color:#fff;padding:2px 8px;border-radius:4px;font-size:12px;">ENABLED</span>
+                    {% else %}
+                    <span style="background:#6b7280;color:#fff;padding:2px 8px;border-radius:4px;font-size:12px;">DISABLED</span>
+                    {% endif %}
+                </td>
+                <td>{{ 'Auto' if g.auto_detected else 'Manual' }}</td>
+                <td>{{ g.created_at.strftime('%d/%m/%y %H:%M') if g.created_at else '-' }}</td>
+                <td>
+                    <form method="post" action="/admin/groups/{{ g.id }}/toggle" style="display:inline">
+                        {% if g.enabled %}
+                        <button type="submit" class="btn btn-sm" style="background:#f59e0b;color:#fff;padding:4px 10px;border-radius:4px;">Disable</button>
+                        {% else %}
+                        <button type="submit" class="btn btn-success btn-sm" style="padding:4px 10px;">Enable</button>
+                        {% endif %}
+                    </form>
+                    <form method="post" action="/admin/groups/{{ g.id }}/delete" style="display:inline" onsubmit="return confirm('Remove this group?')">
+                        <button type="submit" class="btn btn-sm" style="background:#ef4444;color:#fff;padding:4px 10px;border-radius:4px;">Delete</button>
+                    </form>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="6" class="empty">No groups yet. Click "Sync Groups from Whapi" or add one manually.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

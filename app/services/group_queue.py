@@ -155,11 +155,12 @@ async def _has_active_post(
 
 
 async def _post_entry(db: AsyncSession, entry: GroupPostQueue) -> bool:
-    """Actually send the group message and mark as POSTED."""
-    from app.services.whapi import send_group_notification
+    """Broadcast the group message to all enabled groups and mark as POSTED."""
+    from app.services.whapi import broadcast_to_all_groups
 
     try:
-        sent = await send_group_notification(entry.message_body)
+        result = await broadcast_to_all_groups(db, entry.message_body)
+        sent = result["sent"] > 0
         if sent:
             entry.status = PostStatus.POSTED
             entry.posted_at = datetime.now(timezone.utc)

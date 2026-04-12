@@ -14,6 +14,7 @@ from app.models.chat_message import ChatMessage, MessageDirection
 from app.models.event_config import EventConfig
 from app.models.group_post_queue import GroupPostQueue, PostStatus
 from app.models.reseller_inventory import ResellerInventory, InventoryStatus
+from app.models.whatsapp_group import WhatsAppGroup
 
 __all__ = [
     "User", "UserRole",
@@ -30,4 +31,5 @@ __all__ = [
     "EventConfig",
     "GroupPostQueue", "PostStatus",
     "ResellerInventory", "InventoryStatus",
+    "WhatsAppGroup",
 ]

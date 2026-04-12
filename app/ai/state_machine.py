@@ -2043,21 +2043,21 @@ async def _handle_confirming(
                 import logging
                 logging.getLogger(__name__).error(f"Search broadcast failed: {e}")
 
-            # Send group notification via Whapi (independent of broadcast)
+            # Send group notification to ALL enabled groups
             try:
-                from app.services.whapi import send_group_notification
+                from app.services.whapi import broadcast_to_all_groups
                 from app.message_templates.templates import buy_request_group_broadcast
-                await send_group_notification(
+                await broadcast_to_all_groups(
+                    db,
                     buy_request_group_broadcast(
                         event_name=data.get('event_name', ''),
                         event_date=data.get('event_date', ''),
                         quantity=data.get('quantity', 1),
                         max_price=data.get('max_price', 'N/A'),
-                    )
+                    ),
                 )
             except Exception as e:
-                import logging
-                logging.getLogger(__name__).error(f"Whapi group notification failed: {e}")
+                logger.error(f"Group broadcast failed: {e}")
 
             return _t("Opgeslagen! ✅ We hebben het doorgezet naar ons netwerk. Zodra er iets beschikbaar is, hoor je van ons!",
                       "Saved! ✅ We've shared your request with our network. We'll let you know when something's available!")

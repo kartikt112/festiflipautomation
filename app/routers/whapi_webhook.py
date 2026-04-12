@@ -1,9 +1,11 @@
-"""Whapi webhook router – auto-redirects users who message the Festi chat number
-to the main FestiFlip WhatsApp Business number."""
+"""Whapi webhook router – auto-detects groups and redirects DMs."""
 
 import logging
-from fastapi import APIRouter, Request
-from app.services.whapi import send_whapi_dm
+from fastapi import APIRouter, Request, Depends
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.database import get_db
+from app.services.whapi import send_whapi_dm, register_group_if_new
 from app.message_templates.templates import FESTIFLIP_CONTACT
 
 logger = logging.getLogger(__name__)
@@ -21,11 +23,11 @@ _REDIRECT_MESSAGE = (
 
 
 @router.post("/whapi")
-async def receive_whapi_message(request: Request):
+async def receive_whapi_message(request: Request, db: AsyncSession = Depends(get_db)):
     """Handle incoming messages on the Whapi (Festi chat) number.
 
-    Whapi sends webhooks in its own format. We extract the sender and
-    reply with a redirect to the main FestiFlip number.
+    - Group messages: auto-detect and register new groups
+    - DMs: redirect to main FestiFlip number
     """
     body = await request.json()
     logger.info(f"Whapi webhook received: {body}")
@@ -40,17 +42,23 @@ async def receive_whapi_message(request: Request):
             if msg.get("from_me", False):
                 continue
 
-            # Skip group messages — only redirect DMs
             chat_id = msg.get("chat_id", "")
+
+            # Group messages: auto-detect new groups
             if chat_id.endswith("@g.us"):
+                group_name = msg.get("chat_name", "") or msg.get("subject", "")
+                is_new = await register_group_if_new(db, chat_id, group_name)
+                if is_new:
+                    await db.commit()
+                    logger.info(f"New group registered: {chat_id} ({group_name})")
                 continue
 
-            sender = msg.get("chat_id", "")  # e.g. "31637194374@s.whatsapp.net"
-            if not sender:
+            # DMs: redirect to main number
+            if not chat_id:
                 continue
 
-            logger.info(f"Whapi DM from {sender}, sending redirect")
-            await send_whapi_dm(sender, _REDIRECT_MESSAGE)
+            logger.info(f"Whapi DM from {chat_id}, sending redirect")
+            await send_whapi_dm(chat_id, _REDIRECT_MESSAGE)
 
     except Exception as e:
         logger.error(f"Whapi webhook error: {e}", exc_info=True)

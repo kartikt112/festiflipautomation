@@ -463,6 +463,97 @@ async def delete_inventory_item(item_id: int, db: AsyncSession = Depends(get_db)
     return RedirectResponse(url="/admin/resellers", status_code=303)
 
 
+# ─── WhatsApp Groups ───
+
+@router.get("/groups", response_class=HTMLResponse)
+async def groups_page(request: Request, db: AsyncSession = Depends(get_db)):
+    """Manage WhatsApp groups for broadcasting."""
+    auth = check_auth(request)
+    if auth:
+        return auth
+    from app.models.whatsapp_group import WhatsAppGroup
+    result = await db.execute(
+        select(WhatsAppGroup).order_by(WhatsAppGroup.created_at.desc())
+    )
+    groups = list(result.scalars().all())
+    return templates.TemplateResponse("groups.html", {
+        "request": request,
+        "groups": groups,
+        **get_user_info(request),
+    })
+
+
+@router.post("/groups/sync")
+async def sync_groups(request: Request, db: AsyncSession = Depends(get_db)):
+    """Sync groups from Whapi API."""
+    auth = check_auth(request)
+    if auth:
+        return auth
+    from app.services.whapi import sync_groups_to_db
+    count = await sync_groups_to_db(db)
+    await db.commit()
+    logger.info(f"Group sync: {count} new groups found")
+    return RedirectResponse(url="/admin/groups", status_code=303)
+
+
+@router.post("/groups/{group_db_id}/toggle")
+async def toggle_group(group_db_id: int, request: Request, db: AsyncSession = Depends(get_db)):
+    """Enable/disable a group for broadcasting."""
+    auth = check_auth(request)
+    if auth:
+        return auth
+    from app.models.whatsapp_group import WhatsAppGroup
+    result = await db.execute(
+        select(WhatsAppGroup).where(WhatsAppGroup.id == group_db_id)
+    )
+    group = result.scalar_one_or_none()
+    if not group:
+        raise HTTPException(status_code=404, detail="Group not found")
+    group.enabled = not group.enabled
+    await db.commit()
+    return RedirectResponse(url="/admin/groups", status_code=303)
+
+
+@router.post("/groups/add")
+async def add_group_manually(request: Request, db: AsyncSession = Depends(get_db)):
+    """Manually add a WhatsApp group by ID."""
+    auth = check_auth(request)
+    if auth:
+        return auth
+    from app.models.whatsapp_group import WhatsAppGroup
+    data = await request.form()
+    group_id = str(data["group_id"]).strip()
+    if not group_id.endswith("@g.us"):
+        group_id += "@g.us"
+    group = WhatsAppGroup(
+        group_id=group_id,
+        group_name=str(data.get("group_name", "")).strip() or None,
+        enabled=True,
+        auto_detected=False,
+    )
+    db.add(group)
+    await db.commit()
+    return RedirectResponse(url="/admin/groups", status_code=303)
+
+
+@router.post("/groups/{group_db_id}/delete")
+async def delete_group(group_db_id: int, request: Request, db: AsyncSession = Depends(get_db)):
+    """Remove a group."""
+    auth = check_auth(request)
+    if auth:
+        return auth
+    from app.models.whatsapp_group import WhatsAppGroup
+    result = await db.execute(
+        select(WhatsAppGroup).where(WhatsAppGroup.id == group_db_id)
+    )
+    group = result.scalar_one_or_none()
+    if not group:
+        raise HTTPException(status_code=404, detail="Group not found")
+    await db.delete(group)
+    await db.commit()
+    return RedirectResponse(url="/admin/groups", status_code=303)
+
+
 # ─── Chat Dashboard ───
 
 @router.get("/chats", response_class=HTMLResponse)
