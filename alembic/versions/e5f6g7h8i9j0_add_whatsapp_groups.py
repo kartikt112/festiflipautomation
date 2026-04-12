@@ -21,10 +21,10 @@ def upgrade() -> None:
         sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
         sa.Column('group_id', sa.String(length=100), nullable=False),
         sa.Column('group_name', sa.String(length=255), nullable=True),
-        sa.Column('enabled', sa.Boolean(), nullable=False, server_default='1'),
-        sa.Column('auto_detected', sa.Boolean(), nullable=False, server_default='1'),
-        sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
-        sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=True),
+        sa.Column('enabled', sa.Boolean(), nullable=False, server_default=sa.text('true')),
+        sa.Column('auto_detected', sa.Boolean(), nullable=False, server_default=sa.text('true')),
+        sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
+        sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=True),
         sa.PrimaryKeyConstraint('id'),
     )
     op.create_index('ix_whatsapp_groups_group_id', 'whatsapp_groups', ['group_id'], unique=True)
@@ -32,7 +32,7 @@ def upgrade() -> None:
     # Seed the existing hardcoded group so there's no behavior change on deploy
     op.execute(
         "INSERT INTO whatsapp_groups (group_id, group_name, enabled, auto_detected) "
-        "VALUES ('120363423980604716@g.us', 'FestiFlip Operations', 1, 0)"
+        "VALUES ('120363423980604716@g.us', 'FestiFlip Operations', true, false)"
     )
 
 
