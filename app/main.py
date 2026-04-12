@@ -15,9 +15,6 @@ from app.database import init_db, get_db
 from app.routers import health, whatsapp, stripe_webhook, admin, whapi_webhook, auth
 from app.services.scheduler import start_scheduler, stop_scheduler
 
-import firebase_admin
-from firebase_admin import credentials
-
 # Configure logging – stdout always; rotating file only in development
 logging.basicConfig(
     level=logging.INFO,
@@ -37,31 +34,6 @@ async def lifespan(app: FastAPI):
     if "sqlite" in settings.DATABASE_URL:
         await init_db()
         logger.info("SQLite database initialized")
-
-    # Initialize Firebase Admin SDK
-    import os
-    import json
-    
-    # Check if JSON payload is provided natively via env var (useful for Railway)
-    firebase_json_str = os.getenv("FIREBASE_CREDENTIALS_JSON")
-    if firebase_json_str:
-        try:
-            cred_dict = json.loads(firebase_json_str)
-            cred = credentials.Certificate(cred_dict)
-            firebase_admin.initialize_app(cred)
-            logger.info("Firebase Admin SDK initialized from FIREBASE_CREDENTIALS_JSON")
-        except Exception as e:
-            logger.error(f"Failed to initialize Firebase from JSON string: {e}")
-    # Fallback to local file path
-    elif os.path.exists(settings.FIREBASE_CREDENTIALS_PATH):
-        try:
-            cred = credentials.Certificate(settings.FIREBASE_CREDENTIALS_PATH)
-            firebase_admin.initialize_app(cred)
-            logger.info("Firebase Admin SDK initialized from file path")
-        except Exception as e:
-            logger.error(f"Failed to initialize Firebase Admin SDK from file: {e}")
-    else:
-        logger.warning("Firebase credentials not found. Authentication will fail.")
 
     # Start background scheduler
     start_scheduler()
