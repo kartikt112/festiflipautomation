@@ -1562,9 +1562,15 @@ async def _handle_idle(
                 collected_data=collected,
             )
 
-            # FEATURE 5: If most fields missing (user just said "kopen"/"verkopen"),
-            # send form link instead of asking questions one by one.
-            if len(missing) >= 3 and not collected.get("event_name"):
+            # FEATURE 5: If user ONLY stated intent with zero data (short message,
+            # no entities at all), send form link. Don't send form link when the
+            # classifier just failed to extract from a data-rich message.
+            _bare_intent = (
+                len(missing) >= 3
+                and not collected.get("event_name")
+                and len(raw_message.strip()) < 40  # Short message = bare intent
+            )
+            if _bare_intent:
                 from app.message_templates.templates import sell_form_link_message, buy_form_link_message
                 if classification.intent == "SELL_OFFER":
                     return sell_form_link_message(lang=_lang())
