@@ -85,7 +85,7 @@ from app.routers.auth import NotAuthenticatedException
 
 @app.exception_handler(NotAuthenticatedException)
 async def auth_exception_handler(request, exc: NotAuthenticatedException):
-    return RedirectResponse(url="/auth/login?error=not_authenticated", status_code=302)
+    return RedirectResponse(url="/auth/signin?error=not_authenticated", status_code=302)
 
 # Session middleware for Google OAuth
 app.add_middleware(SessionMiddleware, secret_key=settings.SESSION_SECRET_KEY)

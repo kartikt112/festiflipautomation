@@ -287,10 +287,10 @@
     <!-- Firebase JS SDK -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth, signInWithPopup, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getAuth, signInWithRedirect, getRedirectResult, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-        // IMPORTANT CACHE BUSTER - Update timestamp randomly: 12345
-        console.log("Loading version: Popup Flow v2");
+        // CACHE DEFEATER V3
+        console.log("Loading Full Redirect SaaS Version");
 
         const firebaseConfig = {
             apiKey: "AIzaSyBaMNReK8ZHnG1M8-VFuog6KOtXNjWMtqE",
@@ -306,32 +306,34 @@
         const auth = getAuth(app);
         const provider = new GoogleAuthProvider();
 
-        document.getElementById('google-login-btn').addEventListener('click', async () => {
-            try {
-                // Now using popup again since domain is successfully authorized
-                const result = await signInWithPopup(auth, provider);
-                const idToken = await result.user.getIdToken();
-                
-                const response = await fetch('/auth/verify', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ idToken })
-                });
+        // Check if we just bounced back from Google
+        getRedirectResult(auth)
+            .then(async (result) => {
+                if (result) {
+                    const idToken = await result.user.getIdToken();
+                    
+                    const response = await fetch('/auth/verify', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ idToken })
+                    });
 
-                const data = await response.json();
-                if (data.status === 'success' || data.status === 'denied') {
-                    window.location.href = data.redirect;
-                } else {
-                    alert('Validation error: ' + (data.message || 'Unknown error'));
+                    const data = await response.json();
+                    if (data.status === 'success' || data.status === 'denied') {
+                        window.location.href = data.redirect;
+                    } else {
+                        alert('Server Validation error: ' + (data.message || 'Unknown error'));
+                    }
                 }
-            } catch (error) {
+            })
+            .catch((error) => {
                 console.error("Firebase Login Error", error);
-                if (error.code === 'auth/popup-closed-by-user') {
-                    // Ignore if user just closed it
-                    return;
-                }
-                alert(error.message || "Sign-in failed. Please ensure popups are permitted.");
-            }
+                alert("Redirect failed. Please check browser settings.");
+            });
+
+        document.getElementById('google-login-btn').addEventListener('click', () => {
+            // Initiate full window redirect to Google Accounts
+            signInWithRedirect(auth, provider);
         });
     </script>
     <script>

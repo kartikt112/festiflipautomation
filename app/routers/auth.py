@@ -18,15 +18,15 @@ class NotAuthenticatedException(Exception):
     """Exception raised when a user is not authenticated."""
     pass
 
-@router.get("/login", response_class=HTMLResponse)
-async def login_page(request: Request):
+@router.get("/signin", response_class=HTMLResponse)
+async def signin_page(request: Request):
     """Show the login page with Firebase JS."""
     email = request.session.get("email")
     if email and email.lower() in settings.allowed_emails_set:
         return RedirectResponse(url="/admin/", status_code=302)
 
     error = request.query_params.get("error")
-    return templates.TemplateResponse("login.html", {
+    return templates.TemplateResponse("signin.html", {
         "request": request,
         "error": error,
     })
@@ -80,4 +80,4 @@ async def logout(request: Request):
     email = request.session.get("email", "unknown")
     request.session.clear()
     logger.info(f"Logged out: {email}")
-    return RedirectResponse(url="/auth/login", status_code=302)
+    return RedirectResponse(url="/auth/signin", status_code=302)
