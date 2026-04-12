@@ -61,6 +61,10 @@ async def receive_message(request: Request, db: AsyncSession = Depends(get_db)):
         message_id = message_data.get("id", "")
         message_type = message_data.get("type", "")
 
+        # Extract WhatsApp push name (profile name) for display
+        contacts = value.get("contacts", [])
+        push_name = contacts[0].get("profile", {}).get("name", "") if contacts else ""
+
         if not phone:
             return {"status": "ok"}
 
@@ -115,7 +119,7 @@ async def receive_message(request: Request, db: AsyncSession = Depends(get_db)):
         else:
             # Legacy State Machine
             from app.ai.state_machine import process_message as legacy_process
-            reply = await legacy_process(db, phone, text)
+            reply = await legacy_process(db, phone, text, push_name=push_name)
 
         # Send reply and log outbound
         if reply:
@@ -155,8 +159,28 @@ async def _handle_image_message(
     4. If no data: ask the user to describe the ticket in text
     """
     from app.ai.vision_extractor import extract_ticket_from_base64
-    from app.crud.chat_sessions import update_session
+    from app.crud.chat_sessions import update_session, get_or_create_session
     from app.ai.extractor import validate_entities
+
+    # Check if this might be a payment proof screenshot
+    session = await get_or_create_session(db, phone)
+    session_data = session.collected_data or {}
+    pending_action = session_data.get("_pending_action", "")
+    caption_lower = (message_data.get("image", {}).get("caption", "") or "").lower()
+
+    # If buyer just completed a purchase, or caption mentions "betaald"/"payment"
+    is_payment_context = (
+        pending_action in ("undo_buy",)
+        or "betaald" in caption_lower or "betaling" in caption_lower
+        or "payment" in caption_lower or "bewijs" in caption_lower
+    )
+    if is_payment_context:
+        return (
+            "Bedankt voor je betaalbewijs! 📸\n\n"
+            "Als je via onze betaallink hebt betaald, ontvang je automatisch "
+            "de contactgegevens van de verkoper zodra de betaling is bevestigd.\n\n"
+            "Heb je op een andere manier betaald? Neem dan contact op met ons team."
+        )
 
     image_data = message_data.get("image", {})
     media_id = image_data.get("id")

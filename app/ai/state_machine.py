@@ -777,6 +777,7 @@ async def _handle_batch_sell(db: AsyncSession, phone: str, blocks: list) -> str:
                         event_date=entities.get("event_date", ""),
                         quantity=entities.get("quantity", 1),
                         price_per_ticket=entities.get("price_per_ticket", "N/A"),
+                        ticket_type=entities.get("ticket_type", ""),
                     ),
                 )
             except Exception:
@@ -911,7 +912,7 @@ async def _handle_multi_event_batch(
 
 
 async def process_message(
-    db: AsyncSession, phone: str, message: str
+    db: AsyncSession, phone: str, message: str, push_name: str = ""
 ) -> str:
     """Process an incoming WhatsApp message through the state machine.
 
@@ -919,6 +920,7 @@ async def process_message(
         db: Database session
         phone: Sender phone (E.164)
         message: Message text
+        push_name: WhatsApp profile name (from webhook contacts)
 
     Returns:
         Reply message to send back
@@ -928,15 +930,23 @@ async def process_message(
     # all read the same session state and overwrite each other's data.
     phone_lock = await _get_phone_lock(phone)
     async with phone_lock:
-        return await _process_message_inner(db, phone, message)
+        return await _process_message_inner(db, phone, message, push_name=push_name)
 
 
 async def _process_message_inner(
-    db: AsyncSession, phone: str, message: str
+    db: AsyncSession, phone: str, message: str, push_name: str = ""
 ) -> str:
     """Inner message processor — called under per-phone lock."""
     # Get or create conversation session
     session = await get_or_create_session(db, phone)
+
+    # Store WhatsApp push_name in session for use when saving offers/requests
+    if push_name and push_name.strip():
+        data = dict(session.collected_data or {})
+        if data.get("_push_name") != push_name:
+            data["_push_name"] = push_name.strip()
+            await update_session(db, phone, collected_data=data)
+            session = await get_or_create_session(db, phone)
 
     # FIX 3: If bot is paused for this chat (admin takeover), skip all processing
     if getattr(session, "bot_paused", False):
@@ -2094,6 +2104,7 @@ async def _handle_confirming(
                         event_date=data.get('event_date', ''),
                         quantity=data.get('quantity', 1),
                         price_per_ticket=data.get('price_per_ticket', 'N/A'),
+                        ticket_type=data.get('ticket_type', ''),
                     ),
                 )
             except Exception as e:
@@ -2410,8 +2421,10 @@ async def _save_buy_request(db: AsyncSession, data: dict):
     if int(qty) <= 0:
         raise ValueError(f"Invalid quantity: {qty}")
 
+    # Use WhatsApp push_name if no explicit name was provided
+    _name = data.get("first_name") or data.get("_push_name") or "WhatsApp User"
     request_data = BuyRequestCreate(
-        first_name=data.get("first_name", "WhatsApp User"),
+        first_name=_name,
         last_name=data.get("last_name"),
         phone=data["phone"],
         event_name=data.get("event_name", ""),
@@ -2434,8 +2447,10 @@ async def _save_sell_offer(db: AsyncSession, data: dict):
     if int(qty) <= 0:
         raise ValueError(f"Invalid quantity: {qty}")
 
+    # Use WhatsApp push_name if no explicit name was provided
+    _name = data.get("first_name") or data.get("_push_name") or "WhatsApp Seller"
     offer_data = SellOfferCreate(
-        first_name=data.get("first_name", "WhatsApp Seller"),
+        first_name=_name,
         last_name=data.get("last_name"),
         phone=data["phone"],
         event_name=data.get("event_name", ""),

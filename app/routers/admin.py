@@ -23,15 +23,16 @@ from sqlalchemy import select, func
 logger = logging.getLogger(__name__)
 
 
-# ─── Auth Helper ───
+# ─── Auth Dependency ───
 
-def check_auth(request: Request):
-    """Check if user is authenticated. Returns RedirectResponse if not, else None."""
+from app.main import NotAuthenticatedException
+
+async def require_auth(request: Request):
+    """Verify the user is authenticated via Google OAuth with a whitelisted email."""
     email = request.session.get("email")
     if not email or email.lower() not in settings.allowed_emails_set:
-        return RedirectResponse(url="/auth/login?error=not_authenticated", status_code=302)
+        raise NotAuthenticatedException()
     return None
-
 
 def get_user_info(request: Request) -> dict:
     """Get the logged-in user info from session."""
@@ -41,8 +42,7 @@ def get_user_info(request: Request) -> dict:
         "user_picture": request.session.get("picture", ""),
     }
 
-
-router = APIRouter(prefix="/admin", tags=["Admin"])
+router = APIRouter(prefix="/admin", tags=["Admin"], dependencies=[Depends(require_auth)])
 templates = Jinja2Templates(directory="app/templates")
 
 

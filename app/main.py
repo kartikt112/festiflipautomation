@@ -5,6 +5,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Depends
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import RedirectResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from starlette.middleware.sessions import SessionMiddleware
@@ -79,6 +80,13 @@ app = FastAPI(
     version="1.0.0",
     lifespan=lifespan,
 )
+
+class NotAuthenticatedException(Exception):
+    pass
+
+@app.exception_handler(NotAuthenticatedException)
+async def auth_exception_handler(request, exc: NotAuthenticatedException):
+    return RedirectResponse(url="/auth/login?error=not_authenticated", status_code=302)
 
 # Session middleware for Google OAuth
 app.add_middleware(SessionMiddleware, secret_key=settings.SESSION_SECRET_KEY)

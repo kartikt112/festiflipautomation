@@ -161,7 +161,7 @@ def event_sale_broadcast(
     ]
     if section:
         lines.append(f"🪑 {section}")
-    lines.append(f"📥 Bericht FestiFlip {FESTIFLIP_CONTACT} als je geïnteresseerd bent!")
+    lines.append(f"📥 Stuur FestiFlip een bericht via {FESTIFLIP_CONTACT}")
     return "\n".join(lines)
 
 
@@ -176,7 +176,7 @@ def searching_broadcast(
         f"*OP ZOEK🚨*\n\n"
         f"🎟️ {event_name} {date_str}\n"
         f"🔢 {quantity} Stuks\n"
-        f"📥 Bericht FestiFlip {FESTIFLIP_CONTACT} als je deze tickets hebt en wilt verkopen!"
+        f"📥 Stuur FestiFlip een bericht via {FESTIFLIP_CONTACT} als je deze tickets hebt!"
     )
 
 
@@ -195,7 +195,7 @@ def buy_request_group_broadcast(
         f"🎟️ {event_name} {date_str}\n"
         f"🔢 {quantity} Stuks\n"
         f"💰 Max prijs: €{max_price}\n"
-        f"📥 Bericht FestiFlip {FESTIFLIP_CONTACT} als je deze tickets hebt en wilt verkopen!"
+        f"📥 Stuur FestiFlip een bericht via {FESTIFLIP_CONTACT} als je deze tickets hebt!"
     )
 
 
@@ -204,17 +204,21 @@ def sell_offer_group_broadcast(
     event_date: str,
     quantity: int,
     price_per_ticket: str = "N/A",
+    ticket_type: str = "",
 ) -> str:
     """Group notification for new sell offers.
     NEVER includes the seller's phone number — always shows FestiFlip contact.
     """
     date_str = f"({format_date(event_date)})" if event_date else ""
+    name_str = event_name
+    if ticket_type:
+        name_str += f" ({ticket_type})"
     return (
         f"*TE KOOP 🎟️*\n\n"
-        f"🎟️ {event_name} {date_str}\n"
+        f"🎟️ {name_str} {date_str}\n"
         f"🔢 {quantity} Stuks\n"
         f"💰 €{price_per_ticket} per stuk\n"
-        f"📥 Bericht FestiFlip {FESTIFLIP_CONTACT} als je geïnteresseerd bent!"
+        f"📥 Stuur FestiFlip een bericht via {FESTIFLIP_CONTACT}"
     )
 
 
