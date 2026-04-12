@@ -19,15 +19,22 @@ class NotAuthenticatedException(Exception):
     pass
 
 
-# ─── Configure Authlib OAuth ───
+# ─── Configure Authlib OAuth (lazy) ───
 oauth = OAuth()
-oauth.register(
-    name="google",
-    client_id=settings.GOOGLE_CLIENT_ID,
-    client_secret=settings.GOOGLE_CLIENT_SECRET,
-    server_metadata_url="https://accounts.google.com/.well-known/openid-configuration",
-    client_kwargs={"scope": "openid email profile"},
-)
+
+_google_registered = False
+
+def _ensure_google_registered():
+    global _google_registered
+    if not _google_registered:
+        oauth.register(
+            name="google",
+            client_id=settings.GOOGLE_CLIENT_ID,
+            client_secret=settings.GOOGLE_CLIENT_SECRET,
+            server_metadata_url="https://accounts.google.com/.well-known/openid-configuration",
+            client_kwargs={"scope": "openid email profile"},
+        )
+        _google_registered = True
 
 
 @router.get("/signin", response_class=HTMLResponse)
@@ -47,6 +54,7 @@ async def signin_page(request: Request):
 @router.get("/google")
 async def google_login(request: Request):
     """Redirect the user to Google's consent screen."""
+    _ensure_google_registered()
     redirect_uri = str(request.url_for("google_callback"))
     # Force HTTPS in production
     if settings.APP_ENV == "production" or "railway" in redirect_uri:
@@ -58,6 +66,7 @@ async def google_login(request: Request):
 @router.get("/callback")
 async def google_callback(request: Request):
     """Handle Google's OAuth callback."""
+    _ensure_google_registered()
     try:
         token = await oauth.google.authorize_access_token(request)
         user_info = token.get("userinfo")
