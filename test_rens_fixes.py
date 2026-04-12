@@ -315,8 +315,8 @@ async def main():
         PHONE = "+31TEST_FIX_009"
         await reset_user(db, PHONE)
 
-        print(f"\n{BOLD}--- 9.1 Bare 'kopen' gets form link ---{RESET}")
-        r1 = await send(db, PHONE, "kopen")
+        print(f"\n{BOLD}--- 9.1 Bare 'ik wil kopen' gets form link ---{RESET}")
+        r1 = await send(db, PHONE, "ik wil tickets kopen")
         check("Form link sent", has(r1, "festiflip.nl"), f"reply: {r1[:100]}")
 
         print(f"\n{BOLD}--- 9.2 User sends data after form link ---{RESET}")
