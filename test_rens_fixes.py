@@ -87,10 +87,11 @@ async def main():
         PHONE = "+31TEST_FIX_001"
         await reset_user(db, PHONE)
 
-        # Seller completes a sell flow first (send all data in one message)
+        # Seller completes a sell flow (two-step: intent, then data)
         print(f"\n{BOLD}--- 1.1 Seller asks about payout ---{RESET}")
-        r1 = await send(db, PHONE, "ik wil 5 tickets verkopen voor Fanta Event op 3 april voor 60 euro")
-        r2 = await send(db, PHONE, "ja")
+        r1 = await send(db, PHONE, "tickets verkopen")
+        r2 = await send(db, PHONE, "Fanta Event, 3 april, 5 stuks, 60 euro per stuk")
+        r3 = await send(db, PHONE, "ja")
 
         # Now ask about payout
         r4 = await send(db, PHONE, "krijg ik dan gewoon 60 per ticket?")
@@ -239,7 +240,8 @@ async def main():
 
         print(f"\n{BOLD}--- 6.2 Push name used when saving sell offer ---{RESET}")
         await reset_user(db, PHONE)
-        await send(db, PHONE, "ik wil 5 tickets verkopen voor Fanta Event op 3 april voor 60 euro", push_name="Rens Klaucke")
+        await send(db, PHONE, "tickets verkopen", push_name="Rens Klaucke")
+        await send(db, PHONE, "Fanta Event, 3 april, 5 stuks, 60 euro per stuk", push_name="Rens Klaucke")
         await send(db, PHONE, "ja", push_name="Rens Klaucke")
 
         # Check the saved offer has the real name
@@ -293,8 +295,9 @@ async def main():
         await reset_user(db, PHONE)
 
         print(f"\n{BOLD}--- 8.1 Sell with ticket type ---{RESET}")
-        r1 = await send(db, PHONE, "ik wil 3 tickets verkopen voor DGTL Saturday op 5 april voor 80 euro per stuk")
-        check("Confirmation shown", has(r1, "klopt") or has(r1, "checken") or has(r1, "dgtl"), f"reply: {r1[:100]}")
+        r1 = await send(db, PHONE, "tickets verkopen")
+        r2 = await send(db, PHONE, "DGTL Saturday, 5 april, 3 stuks, 80 euro per stuk")
+        check("Confirmation shown", has(r2, "klopt") or has(r2, "checken") or has(r2, "dgtl"), f"reply: {r2[:100]}")
         # Check ticket type extracted
         session = await get_session(db, PHONE)
         cd = session.collected_data or {}
@@ -316,8 +319,8 @@ async def main():
         r1 = await send(db, PHONE, "kopen")
         check("Form link sent", has(r1, "festiflip.nl"), f"reply: {r1[:100]}")
 
-        print(f"\n{BOLD}--- 9.2 User sends data in one go ---{RESET}")
-        r2 = await send(db, PHONE, "ik zoek 2 tickets voor Thuishaven op 18 april, max 60 euro per stuk")
+        print(f"\n{BOLD}--- 9.2 User sends data after form link ---{RESET}")
+        r2 = await send(db, PHONE, "Thuishaven, 18 april, 2 stuks, max 60 euro per stuk")
         check("Confirmation after data", has(r2, "klopt") or has(r2, "checken") or has(r2, "thuishaven"), f"reply: {r2[:100]}")
         await db.commit()
 
@@ -333,7 +336,8 @@ async def main():
         await reset_user(db, PHONE)
 
         print(f"\n{BOLD}--- 10.1 'komende zaterdag' resolves to date ---{RESET}")
-        r1 = await send(db, PHONE, "ik wil 2 tickets verkopen voor DGTL komende zaterdag voor 90 euro")
+        await send(db, PHONE, "tickets verkopen")
+        r1 = await send(db, PHONE, "DGTL, komende zaterdag, 2 stuks, 90 euro per stuk")
         session = await get_session(db, PHONE)
         cd = session.collected_data or {}
         event_date = cd.get("event_date", "")

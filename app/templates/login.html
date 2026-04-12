@@ -4,7 +4,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>FestiFlip Admin – Sign In</title>
+    <!-- ... Rest of styles remain ... -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         *,
@@ -283,7 +287,10 @@
     <!-- Firebase JS SDK -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth, signInWithRedirect, getRedirectResult, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+        // IMPORTANT CACHE BUSTER - Update timestamp randomly: 12345
+        console.log("Loading version: Popup Flow v2");
 
         const firebaseConfig = {
             apiKey: "AIzaSyBaMNReK8ZHnG1M8-VFuog6KOtXNjWMtqE",
@@ -299,39 +306,32 @@
         const auth = getAuth(app);
         const provider = new GoogleAuthProvider();
 
-        // 1. Check if we just came back from the Google Login redirect
-        getRedirectResult(auth)
-            .then(async (result) => {
-                if (result) {
-                    const idToken = await result.user.getIdToken();
-                    
-                    // Send token to backend
-                    const response = await fetch('/auth/verify', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({ idToken })
-                    });
+        document.getElementById('google-login-btn').addEventListener('click', async () => {
+            try {
+                // Now using popup again since domain is successfully authorized
+                const result = await signInWithPopup(auth, provider);
+                const idToken = await result.user.getIdToken();
+                
+                const response = await fetch('/auth/verify', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ idToken })
+                });
 
-                    const data = await response.json();
-                    if (data.status === 'success') {
-                        window.location.href = data.redirect;
-                    } else if (data.status === 'denied') {
-                        window.location.href = data.redirect;
-                    } else {
-                        alert('Authentication error: ' + (data.message || 'Unknown error'));
-                    }
+                const data = await response.json();
+                if (data.status === 'success' || data.status === 'denied') {
+                    window.location.href = data.redirect;
+                } else {
+                    alert('Validation error: ' + (data.message || 'Unknown error'));
                 }
-            })
-            .catch((error) => {
+            } catch (error) {
                 console.error("Firebase Login Error", error);
-                alert("Sign-in failed. Please ensure your browser isn't blocking cookies.");
-            });
-
-        // 2. Trigger redirect when button is clicked
-        document.getElementById('google-login-btn').addEventListener('click', () => {
-            signInWithRedirect(auth, provider);
+                if (error.code === 'auth/popup-closed-by-user') {
+                    // Ignore if user just closed it
+                    return;
+                }
+                alert(error.message || "Sign-in failed. Please ensure popups are permitted.");
+            }
         });
     </script>
     <script>
