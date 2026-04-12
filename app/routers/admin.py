@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 
 # ─── Auth Dependency ───
 
-from app.main import NotAuthenticatedException
+from app.routers.auth import NotAuthenticatedException
 
 async def require_auth(request: Request):
     """Verify the user is authenticated via Google OAuth with a whitelisted email."""

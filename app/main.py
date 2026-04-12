@@ -81,8 +81,7 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-class NotAuthenticatedException(Exception):
-    pass
+from app.routers.auth import NotAuthenticatedException
 
 @app.exception_handler(NotAuthenticatedException)
 async def auth_exception_handler(request, exc: NotAuthenticatedException):

@@ -14,6 +14,10 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/auth", tags=["Auth"])
 templates = Jinja2Templates(directory="app/templates")
 
+class NotAuthenticatedException(Exception):
+    """Exception raised when a user is not authenticated."""
+    pass
+
 @router.get("/login", response_class=HTMLResponse)
 async def login_page(request: Request):
     """Show the login page with Firebase JS."""
