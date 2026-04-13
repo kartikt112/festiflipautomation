@@ -468,9 +468,6 @@ async def delete_inventory_item(item_id: int, db: AsyncSession = Depends(get_db)
 @router.get("/groups", response_class=HTMLResponse)
 async def groups_page(request: Request, db: AsyncSession = Depends(get_db)):
     """Manage WhatsApp groups for broadcasting."""
-    auth = check_auth(request)
-    if auth:
-        return auth
     from app.models.whatsapp_group import WhatsAppGroup
     result = await db.execute(
         select(WhatsAppGroup).order_by(WhatsAppGroup.created_at.desc())
@@ -486,9 +483,6 @@ async def groups_page(request: Request, db: AsyncSession = Depends(get_db)):
 @router.post("/groups/sync")
 async def sync_groups(request: Request, db: AsyncSession = Depends(get_db)):
     """Sync groups from Whapi API."""
-    auth = check_auth(request)
-    if auth:
-        return auth
     from app.services.whapi import sync_groups_to_db
     count = await sync_groups_to_db(db)
     await db.commit()
@@ -499,9 +493,6 @@ async def sync_groups(request: Request, db: AsyncSession = Depends(get_db)):
 @router.post("/groups/{group_db_id}/toggle")
 async def toggle_group(group_db_id: int, request: Request, db: AsyncSession = Depends(get_db)):
     """Enable/disable a group for broadcasting."""
-    auth = check_auth(request)
-    if auth:
-        return auth
     from app.models.whatsapp_group import WhatsAppGroup
     result = await db.execute(
         select(WhatsAppGroup).where(WhatsAppGroup.id == group_db_id)
@@ -517,9 +508,6 @@ async def toggle_group(group_db_id: int, request: Request, db: AsyncSession = De
 @router.post("/groups/add")
 async def add_group_manually(request: Request, db: AsyncSession = Depends(get_db)):
     """Manually add a WhatsApp group by ID."""
-    auth = check_auth(request)
-    if auth:
-        return auth
     from app.models.whatsapp_group import WhatsAppGroup
     data = await request.form()
     group_id = str(data["group_id"]).strip()
@@ -539,9 +527,6 @@ async def add_group_manually(request: Request, db: AsyncSession = Depends(get_db
 @router.post("/groups/{group_db_id}/delete")
 async def delete_group(group_db_id: int, request: Request, db: AsyncSession = Depends(get_db)):
     """Remove a group."""
-    auth = check_auth(request)
-    if auth:
-        return auth
     from app.models.whatsapp_group import WhatsAppGroup
     result = await db.execute(
         select(WhatsAppGroup).where(WhatsAppGroup.id == group_db_id)
