@@ -77,6 +77,7 @@ def seller_confirmation_message(
         "3. Daarna kan jij de koper een betaalverzoek sturen van jouw deel. (Verkoopprijs - 7,5%/€5 per ticket)",
         "4. Leg even aan de koper uit of je gelijk het ticket kan opsturen, of dat je het ticket op naam zet en handmatig naar diegene stuurt wanneer ze zijn te downloaden.",
         "5. Laat de koper altijd eerst betalen, voordat je het ticket op naam zet of doorstuurt.",
+        "\n📸 Stuur ons nu een screenshot of foto van je ticket als bewijs. Dit is verplicht voordat we je aanbod kunnen plaatsen.",
     ]
     return "\n".join(lines)
 
@@ -144,6 +145,16 @@ def seller_buyer_found_message(
 # FestiFlip contact number — always use this in group broadcasts instead of user's number
 FESTIFLIP_CONTACT = "+31 6 12899608"
 
+# Max tickets to show in a single broadcast (overflow creates a second listing)
+MAX_BROADCAST_TICKETS = 4
+
+_NUM_EMOJI = {1: "1️⃣", 2: "2️⃣", 3: "3️⃣", 4: "4️⃣"}
+
+
+def _qty_emoji(n: int) -> str:
+    """Return number emoji for 1-4, fallback to 🔢 for higher."""
+    return _NUM_EMOJI.get(n, "🔢")
+
 
 def event_sale_broadcast(
     event_name: str,
@@ -154,9 +165,10 @@ def event_sale_broadcast(
     seat_info: str = "",
 ) -> str:
     """Public listing – NO exact seat numbers shown (compliance rule)."""
+    display_qty = min(quantity, MAX_BROADCAST_TICKETS)
     lines = [
         f"🎟️ {event_name} ({format_date(event_date)})",
-        f"{quantity} Stuks ({seat_info})" if seat_info else f"{quantity} Stuks",
+        f"{_qty_emoji(display_qty)} {display_qty} Stuks" + (f" ({seat_info})" if seat_info else ""),
         f"💰 €{price:.2f} per stuk",
     ]
     if section:
@@ -175,7 +187,7 @@ def searching_broadcast(
     return (
         f"*OP ZOEK🚨*\n\n"
         f"🎟️ {event_name} {date_str}\n"
-        f"🔢 {quantity} Stuks\n"
+        f"{_qty_emoji(min(quantity, MAX_BROADCAST_TICKETS))} {quantity} Stuks\n"
         f"📥 Stuur FestiFlip een bericht via {FESTIFLIP_CONTACT} als je deze tickets hebt!"
     )
 
@@ -193,8 +205,7 @@ def buy_request_group_broadcast(
     return (
         f"*🚨 OP ZOEK 🚨*\n\n"
         f"🎟️ {event_name} {date_str}\n"
-        f"🔢 {quantity} Stuks\n"
-        f"💰 Max prijs: €{max_price}\n"
+        f"{_qty_emoji(min(quantity, MAX_BROADCAST_TICKETS))} {quantity} Stuks\n"
         f"📥 Stuur FestiFlip een bericht via {FESTIFLIP_CONTACT} als je deze tickets hebt!"
     )
 
@@ -208,15 +219,16 @@ def sell_offer_group_broadcast(
 ) -> str:
     """Group notification for new sell offers.
     NEVER includes the seller's phone number — always shows FestiFlip contact.
+    Capped at 4 tickets per broadcast. No "TE KOOP" header.
     """
     date_str = f"({format_date(event_date)})" if event_date else ""
     name_str = event_name
     if ticket_type:
         name_str += f" ({ticket_type})"
+    display_qty = min(int(quantity), MAX_BROADCAST_TICKETS)
     return (
-        f"*TE KOOP 🎟️*\n\n"
         f"🎟️ {name_str} {date_str}\n"
-        f"🔢 {quantity} Stuks\n"
+        f"{_qty_emoji(display_qty)} {display_qty} Stuks\n"
         f"💰 €{price_per_ticket} per stuk\n"
         f"📥 Stuur FestiFlip een bericht via {FESTIFLIP_CONTACT}"
     )

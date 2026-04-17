@@ -39,7 +39,7 @@ CONFIRMING = "CONFIRMING"
 COMPLETE = "COMPLETE"
 
 # Session timeout: reset stale sessions older than this
-SESSION_TIMEOUT_HOURS = 24
+SESSION_TIMEOUT_HOURS = 2
 
 # ── Per-phone message lock ──
 # Prevents concurrent messages from the same user from racing each other.
@@ -1734,8 +1734,18 @@ async def _handle_collecting(
         prefix = "Oké! " if "nee" in msg_words or "niet" in msg_words else ""
         prefix += "We switchen naar verkopen. " if new_intent == "SELL_OFFER" else "We switchen naar kopen. "
 
-        # Show fill template if 2+ fields still missing
-        if len(missing) >= 2:
+        # Send form link if most fields missing (bare intent switch)
+        if len(missing) >= 3 and not existing.get("event_name") and len(raw_message.strip()) < 40:
+            from app.message_templates.templates import sell_form_link_message, buy_form_link_message
+            await update_session(
+                db, phone,
+                current_intent=new_intent,
+                current_step=COLLECTING,
+                collected_data=existing,
+            )
+            form_msg = sell_form_link_message(lang=_lang()) if new_intent == "SELL_OFFER" else buy_form_link_message(lang=_lang())
+            return prefix + "\n\n" + form_msg
+        elif len(missing) >= 2:
             await update_session(
                 db, phone,
                 current_intent=new_intent,
@@ -2223,7 +2233,12 @@ async def _handle_confirming(
                 return prefix + "\n\n" + _format_confirmation(new_intent, existing)
             else:
                 await update_session(db, phone, current_intent=new_intent, current_step=COLLECTING, collected_data=existing)
-                if len(missing) >= 2:
+                # Send form link if bare intent switch with no data
+                if len(missing) >= 3 and not existing.get("event_name"):
+                    from app.message_templates.templates import sell_form_link_message, buy_form_link_message
+                    form_msg = sell_form_link_message(lang=_lang()) if new_intent == "SELL_OFFER" else buy_form_link_message(lang=_lang())
+                    return prefix + "\n\n" + form_msg
+                elif len(missing) >= 2:
                     return prefix + "\n\n" + _fill_template_with_data(new_intent, existing)
                 return prefix + ask_missing_field(missing[0], new_intent)
 
@@ -2319,9 +2334,7 @@ def _format_confirmation(intent: str, data: dict) -> str:
     if data.get("quantity"):
         lines.append(f"🔢 {data['quantity']}x")
 
-    if intent == "BUY_REQUEST" and data.get("max_price"):
-        lines.append(f"💰 Max €{data['max_price']} per ticket")
-    elif intent == "SELL_OFFER" and data.get("price_per_ticket"):
+    if intent == "SELL_OFFER" and data.get("price_per_ticket"):
         lines.append(f"💰 €{data['price_per_ticket']} per ticket")
 
     lines.append("\n" + ("Correct? Type yes or no." if en else "Klopt? Typ ja of nee."))
